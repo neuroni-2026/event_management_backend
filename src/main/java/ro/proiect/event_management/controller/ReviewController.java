@@ -1,5 +1,7 @@
 package ro.proiect.event_management.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/reviews")
+@Tag(name = "Recenzii", description = "Gestionare recenzii evenimente")
 public class ReviewController
 {
     @Autowired
@@ -25,6 +28,7 @@ public class ReviewController
     // 1. ADAUGA RECENZIE (Doar Studenti)
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Adaugă o recenzie (Doar Studenți)")
     public ResponseEntity <?> addReview(@Valid @RequestBody CreateReviewRequest request)
     {
         try
@@ -42,6 +46,7 @@ public class ReviewController
     // 2. VEZI RECENZII PENTRU UN EVENT (Public)
     // URL: /api/reviews/event/1
     @GetMapping("event/{eventId}")
+    @Operation(summary = "Vezi toate recenziile unui eveniment")
     public List<ReviewResponse> getEventReviews(@PathVariable Long eventId)
     {
         return reviewService.getReviewsByEvent(eventId);

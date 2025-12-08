@@ -66,4 +66,55 @@ public class EventServiceImpl implements EventService
     {
         return eventRepository.findByOrganizerId(organizerId);
     }
+
+    @Override
+    public void approveEvent(Long eventId)
+    {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Error: Event not found."));
+
+        event.setStatus(EventStatus.PUBLISHED);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public void deleteEvent(Long eventId, Long organizerId)
+    {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Error: Event not found."));
+
+        // SECURITATE: Verificam daca cel care sterge este chiar proprietarul
+        if(!event.getOrganizer().getId().equals(organizerId))
+        {
+            throw new RuntimeException("Error: You can only delete your own events!");
+        }
+
+        eventRepository.delete(event);
+    }
+
+    @Override
+    public void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData)
+    {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(organizerId)) {
+            throw new RuntimeException("Error: You can only edit your own events!");
+        }
+
+        // Actualizam datele
+        event.setTitle(newData.getTitle());
+        event.setDescription(newData.getDescription());
+        event.setLocation(newData.getLocation());
+        event.setStartTime(newData.getStartTime());
+        event.setEndTime(newData.getEndTime());
+        event.setMaxCapacity(newData.getMaxCapacity());
+        event.setImageUrl(newData.getImageUrl());
+
+        // Optional: Daca editeaza un eveniment deja publicat, il trecem inapoi in PENDING?
+        // Pentru simplitate, il lasam asa cum e momentan.
+
+        eventRepository.save(event);
+
+    }
 }

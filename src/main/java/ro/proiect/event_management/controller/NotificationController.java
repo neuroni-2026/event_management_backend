@@ -1,5 +1,7 @@
 package ro.proiect.event_management.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +18,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/notifications")
+@Tag(name = "Notificări", description = "Vezi notificările primite")
 public class NotificationController
 {
     @Autowired
@@ -23,6 +26,7 @@ public class NotificationController
 
     @GetMapping
     @PreAuthorize("hasRole('STUDENT') or hasRole('ORGANIZER')")
+    @Operation(summary = "Obține lista de notificări")
     public List<Notification> getMyNotifications()
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

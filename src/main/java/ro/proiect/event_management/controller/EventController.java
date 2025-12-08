@@ -1,5 +1,7 @@
 package ro.proiect.event_management.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,12 +23,14 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/events")
+@Tag(name = "Evenimente", description = "Gestionare evenimente (CRUD)")
 public class EventController
 {
     @Autowired
     private EventService eventService;
 
     @GetMapping
+    @Operation(summary = "Obține toate evenimentele publice")
     public List<Event> getAllEvents()
     {
         return eventService.getAllPublicEvents();
@@ -34,6 +38,7 @@ public class EventController
 
     @PostMapping
     @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Creează un eveniment nou (Doar Organizatori)")
     public ResponseEntity<?> createEvent(@RequestBody CreateEventRequest request)
     {
         // Extragem ID-ul userului logat
@@ -48,10 +53,40 @@ public class EventController
     // 3. MY EVENTS (Organizer)
     @GetMapping("/my-events")
     @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Vezi evenimentele create de mine (Organizator)")
     public List<Event> getMyEvents() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         return eventService.getMyEvents(userDetails.getId());
     }
 
+    // 4. STERGE EVENIMENT
+    @DeleteMapping("/{eventId}")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Șterge un eveniment propriu")
+    public ResponseEntity<?> deleteEvent(@PathVariable Long eventId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        try {
+            eventService.deleteEvent(eventId, userDetails.getId());
+            return ResponseEntity.ok(new MessageResponse("Event deleted successfully!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    // 5. EDITEAZA EVENIMENT
+    @PutMapping("/{eventId}")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Editează un eveniment propriu")
+    public ResponseEntity<?> updateEvent(@PathVariable Long eventId, @RequestBody CreateEventRequest request) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        try {
+            eventService.updateEvent(eventId, userDetails.getId(), request);
+            return ResponseEntity.ok(new MessageResponse("Event updated successfully!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(new MessageResponse(e.getMessage()));
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package ro.proiect.event_management.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*", maxAge = 3600) //permite react-ului sa vb cu java
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autentificare", description = "Endpoint-uri pentru login și înregistrare")
 public class AuthController
 {
     @Autowired
@@ -46,6 +49,7 @@ public class AuthController
 
     // 1. LOGIN
     @PostMapping("/signin")
+    @Operation(summary = "Autentificare utilizator și generare token JWT")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest)
     {
 
@@ -81,6 +85,7 @@ public class AuthController
 
     // 2. REGISTER
     @PostMapping("/signup")
+    @Operation(summary = "Înregistrare utilizator nou (Student sau Organizator)")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest)
     {
         try

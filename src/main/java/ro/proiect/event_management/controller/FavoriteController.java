@@ -1,5 +1,7 @@
 package ro.proiect.event_management.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +17,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/favorites")
+@Tag(name = "Favorite", description = "Gestionare listă evenimente favorite")
 public class FavoriteController
 {
     @Autowired
@@ -30,6 +33,7 @@ public class FavoriteController
     // POST /api/favorites/10
     @PostMapping("/{eventId}")
     @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Adaugă eveniment la favorite")
     public ResponseEntity<?> addFavorite(@PathVariable Long eventId)
     {
         try
@@ -47,6 +51,7 @@ public class FavoriteController
     // DELETE /api/favorites/10
     @DeleteMapping("/{eventId}")
     @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Șterge eveniment din favorite")
     public ResponseEntity<?> removeFavorite(@PathVariable Long eventId)
     {
         try
@@ -64,6 +69,7 @@ public class FavoriteController
     // GET /api/favorites
     @GetMapping
     @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Vezi lista mea de favorite")
     public List<FavoriteResponse> getMyFavorites()
     {
         return favoriteService.getMyFavorites(getLoggedUserId());
@@ -73,6 +79,7 @@ public class FavoriteController
     // GET /api/favorites/check/10
     @GetMapping("/check/{eventId}")
     @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Verifică dacă un eveniment este favorit")
     public ResponseEntity<Boolean> checkFavorite(@PathVariable Long eventId)
     {
         boolean isFav = favoriteService.isFavorite(eventId, getLoggedUserId());
