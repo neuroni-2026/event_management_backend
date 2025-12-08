@@ -1,0 +1,59 @@
+.App {
+  text-align: center;
+  padding: 20px;
+  min-height: 100vh;
+  
+}
+
+.Search {
+  max-width: 100%;
+  margin: 20px 20px 0 20px;
+  display: flex;
+  align-items: center;
+  border: 2px solid black;
+  border-radius: 20px;
+
+}
+
+.search-icon {
+  margin-left: 10px;
+  width: 20px;     
+}
+
+.search-input {
+  
+
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 16px;
+  border-radius: 20px;
+
+}
+
+.Grid {
+  display: grid;
+  gap: 20px;
+  
+ 
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  
+  min-width: 100%; 
+  margin: 0 auto;
+  justify-items: center; 
+}
+
+@media (min-width: 768px) {
+  .Grid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+@media (min-width: 1024px) {
+  .Grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
