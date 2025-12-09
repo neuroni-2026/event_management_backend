@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Assist from '../Images/ASSIST.png'
 
 
+
 const EventCard = () => {
   const navigate = useNavigate();
   const handleClick = () => {
@@ -11,6 +12,7 @@ const EventCard = () => {
   
 };
   return (
+    
     <div className="card">
       <div className="image-container">
         <img className="card-image" src={Assist} alt="Event" />

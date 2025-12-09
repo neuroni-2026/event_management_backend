@@ -4,6 +4,7 @@ import './EventCardDetails.css';
 import { useState } from 'react';
 import usv from '../Images/usv.jpg';
 import TicketModal from './Ticket';
+import Circle from '../Icons/circle.png';
 
 
 
@@ -25,10 +26,17 @@ const [esteInscris, setEsteInscris] = useState(false);
 
   return (
     <div className="event-pagina">
+       <div className= "Header">
+                      <h1>Event Manager</h1>
+                      <div className="user-info">
+                      <p>Nume & Prenume <br/> Statut</p>
+                      <img src={Circle} alt="circle" className="circle-icon"/>
+                      </div>
+                    </div>
       <div className="card-detalii">
         
         <div className="header">
-          <button className="buton-back" onClick={handleClick}>&lt;Back</button>
+          <button className="back" onClick={handleClick}>&lt;Back</button>
           <h1 className="event-title">ASSIST OPEN DOORS 25</h1>
         </div>
 
