@@ -1,6 +1,8 @@
 package ro.proiect.event_management.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,22 @@ public class EventController
 {
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private EventRepository eventRepository;
+
+    // În EventController.java
+    @GetMapping("/{id}")
+    @Operation(summary = "Obține detalii despre un eveniment", description = "Returnează obiectul complet al unui eveniment pe baza ID-ului. Este folosit pentru pagina de detalii.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Eveniment găsit cu succes"),
+            @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
+    })
+    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+        return eventRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @GetMapping
     @Operation(summary = "Obține toate evenimentele publice")
