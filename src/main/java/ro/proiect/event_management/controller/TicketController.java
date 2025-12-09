@@ -18,7 +18,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/tickets")
-@Tag(name = "Bilete", description = "Cumpărare și vizualizare bilete")
+@Tag(name = "Bilete", description = "Obținere și vizualizare bilete")
 public class TicketController
 {
     @Autowired
@@ -28,7 +28,7 @@ public class TicketController
     // 1. CUMPARA BILET (Doar Student)
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
-    @Operation(summary = "Cumpără un bilet (Doar Studenți)")
+    @Operation(summary = "Obține un bilet (Doar Studenți)")
     public ResponseEntity<?> purchaseTicket(@RequestBody PurchaseTicketRequest request)
     {
         try
@@ -50,7 +50,7 @@ public class TicketController
     // 2. LISTA MEA DE BILETE (Portofel)
     @GetMapping("/my-tickets")
     @PreAuthorize("hasRole('STUDENT')")
-    @Operation(summary = "Obține biletele cumpărate de studentul curent")
+    @Operation(summary = "Obține biletele înregistrate de studentul curent")
     public List<TicketResponse> getMyTickets()
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

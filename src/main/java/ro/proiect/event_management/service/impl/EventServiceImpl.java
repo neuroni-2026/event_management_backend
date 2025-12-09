@@ -93,16 +93,17 @@ public class EventServiceImpl implements EventService
     }
 
     @Override
-    public void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData)
-    {
+    public void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData) {
+        // 1. Căutăm evenimentul existent
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
+        // 2. Verificăm securitatea (doar proprietarul are voie)
         if (!event.getOrganizer().getId().equals(organizerId)) {
             throw new RuntimeException("Error: You can only edit your own events!");
         }
 
-        // Actualizam datele
+        // 3. Actualizăm doar datele informative
         event.setTitle(newData.getTitle());
         event.setDescription(newData.getDescription());
         event.setLocation(newData.getLocation());
@@ -111,10 +112,22 @@ public class EventServiceImpl implements EventService
         event.setMaxCapacity(newData.getMaxCapacity());
         event.setImageUrl(newData.getImageUrl());
 
-        // Optional: Daca editeaza un eveniment deja publicat, il trecem inapoi in PENDING?
-        // Pentru simplitate, il lasam asa cum e momentan.
+        try
+        {
+            event.setCategory(EventCategory.valueOf(newData.getCategory().toUpperCase()));
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new RuntimeException("Invalid category: " + newData.getCategory());
+        }
 
+        // --- IMPORTANT ---
+        // NU scriem linia: event.setStatus(EventStatus.PENDING);
+        // Neatingand acest camp, Hibernate va pastra valoarea veche din baza de date.
+        // Dacă era PUBLISHED, ramane PUBLISHED.
+        // -----------------
+
+        // 4. Salvam modificarile
         eventRepository.save(event);
-
     }
 }
