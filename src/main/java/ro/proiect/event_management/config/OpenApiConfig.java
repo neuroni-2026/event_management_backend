@@ -22,7 +22,7 @@ public class OpenApiConfig {
         // 2. Configurarea Informatiilor de Contact (Optional)
         Contact contact = new Contact();
 //        contact.setEmail("student@upb.ro");
-//        contact.setName("Echipa Licenta");
+//        contact.setName("Echipa Proiect");
 
         // 3. Configurarea Titlului si Descrierii Generale
         Info info = new Info()

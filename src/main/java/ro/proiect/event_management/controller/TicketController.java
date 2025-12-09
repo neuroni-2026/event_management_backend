@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import ro.proiect.event_management.dto.request.PurchaseTicketRequest;
 import ro.proiect.event_management.dto.response.MessageResponse;
 import ro.proiect.event_management.dto.response.TicketResponse;
+import ro.proiect.event_management.entity.Ticket;
+import ro.proiect.event_management.repository.TicketRepository;
 import ro.proiect.event_management.security.services.UserDetailsImpl;
 import ro.proiect.event_management.service.TicketService;
 
@@ -23,6 +25,9 @@ public class TicketController
 {
     @Autowired
     private TicketService ticketService;
+
+    @Autowired
+    private TicketRepository ticketRepository;
 
 
     // 1. CUMPARA BILET (Doar Student)
@@ -56,5 +61,40 @@ public class TicketController
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         return ticketService.getMyTickets(userDetails.getId());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Obține detalii despre un bilet specific", description = "Returnează detalii complete despre un bilet, dar doar dacă aparține utilizatorului autentificat.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Bilet găsit cu succes"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Biletul nu a fost găsit"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Nu ai permisiunea de a vizualiza acest bilet")
+    })
+    public ResponseEntity<?> getTicketById(@PathVariable Long id) {
+        // 1. Aflam cine este userul logat
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long currentUserId = userDetails.getId();
+
+        // 2. Cautam biletul in baza de date
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Biletul nu a fost găsit!"));
+
+        // 3. SECURITATE: Verificam daca biletul apartine userului logat
+        if (!ticket.getUser().getId().equals(currentUserId)) {
+            return ResponseEntity.status(403).body("Nu ai voie să vezi acest bilet! Nu este al tău.");
+        }
+
+        // 4. Construim raspunsul (DTO)
+        TicketResponse response = new TicketResponse(
+                ticket.getId(),
+                ticket.getEvent().getTitle(),
+                ticket.getEvent().getLocation(),
+                ticket.getEvent().getStartTime(),
+                ticket.getQrCode(),
+                ticket.getUser().getFirstName() + " " + ticket.getUser().getLastName(),
+                ticket.getCreatedAt()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

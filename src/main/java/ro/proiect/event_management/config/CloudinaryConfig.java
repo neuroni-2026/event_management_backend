@@ -15,8 +15,6 @@ public class CloudinaryConfig
     {
         Map<String, String> config = new HashMap<>();
 
-        // --- IMPORTANT ---
-        // Inlocuieste valorile de mai jos cu cele din contul tau Cloudinary
         config.put("cloud_name", "dozehb22z");
         config.put("api_key", "239485667242298");
         config.put("api_secret", "fqppayo_kCg4E4Nrb-nA_Q2f0bc");

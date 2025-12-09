@@ -83,7 +83,8 @@ public class TicketServiceImpl implements TicketService
                 event.getLocation(),
                 event.getStartTime(),
                 ticket.getQrCode(),
-                student.getFirstName() + " " + student.getLastName()
+                student.getFirstName() + " " + student.getLastName(),
+                ticket.getCreatedAt()
         );
     }
 
@@ -100,7 +101,8 @@ public class TicketServiceImpl implements TicketService
                 ticket.getEvent().getLocation(),
                 ticket.getEvent().getStartTime(),
                 ticket.getQrCode(),
-                ticket.getUser().getFirstName() + " " + ticket.getUser().getLastName()
+                ticket.getUser().getFirstName() + " " + ticket.getUser().getLastName(),
+                ticket.getCreatedAt()
         )).collect(Collectors.toList());
     }
 }

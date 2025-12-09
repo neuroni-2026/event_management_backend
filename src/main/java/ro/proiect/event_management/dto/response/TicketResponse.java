@@ -15,4 +15,5 @@ public class TicketResponse
     private LocalDateTime eventDate;
     private String qrCode;      // String-ul unic (React va genera poza din el)
     private String studentName; // Numele posesorului
+    private LocalDateTime createdAt;
 }
