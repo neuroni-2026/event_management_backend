@@ -39,6 +39,7 @@ public class AdminController {
     // Adminul trebuie sa vada tot ca sa stie ce aproba
     @GetMapping("/all-events")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Obține toate evenimentele (Admin)")
     public List<Event> getAllEventsAdmin() {
         return eventRepository.findAll();
     }
@@ -46,6 +47,7 @@ public class AdminController {
     // 3. VEZI DOAR CELE PENDING (Ca sa lucreze mai usor)
     @GetMapping("/pending-events")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Obține evenimentele în așteptare (Pending)")
     public List<Event> getPendingEvents() {
         return eventRepository.findByStatus(EventStatus.PENDING);
     }
