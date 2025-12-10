@@ -55,17 +55,28 @@ public class ReviewServiceImpl implements ReviewService
     }
 
     @Override
-    public List<ReviewResponse> getReviewsByEvent(Long eventId)
-    {
+    public List<ReviewResponse> getReviewsByEvent(Long eventId) {
         List<Review> reviews = reviewRepository.findByEventId(eventId);
 
-        //Convertim Entitatile in DTO-uri
-        return reviews.stream().map(r -> new ReviewResponse(
-                r.getId(),
-                r.getUser().getFirstName() + " " + r.getUser().getLastName(),
-                r.getRating(),
-                r.getComment(),
-                r.getCreatedAt()
-        )).collect(Collectors.toList());
+        return reviews.stream().map(review -> {
+            User user = review.getUser();
+
+            // Construim ReviewerDto folosind builder
+            ReviewResponse.ReviewerDto reviewerDto = ReviewResponse.ReviewerDto.builder()
+                    .id(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .build();
+
+            // Construim raspunsul final folosind builder
+            return ReviewResponse.builder()
+                    .id(review.getId())
+                    .rating(review.getRating())
+                    .comment(review.getComment())
+                    .createdAt(review.getCreatedAt()) // Asigura-te ca ai getCreatedAt() in entitatea Review
+                    .reviewer(reviewerDto)            // Aici punem obiectul creat mai sus
+                    .build();
+
+        }).collect(Collectors.toList());
     }
 }
