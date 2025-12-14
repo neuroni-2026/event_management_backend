@@ -1,6 +1,5 @@
 package ro.proiect.event_management.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -24,20 +23,30 @@ public class Notification
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Ignoram userul in JSON (stim deja al cui e)
+    // --- RELATII ---
+
+    // 1. Studentul care primeste notificarea
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnore // Nu vrem sa vedem tot userul in JSON-ul notificarii
     private User user;
 
-    // MODIFICARE 2: Ignoram Proxy-ul pentru Event ---
+    // 2. Evenimentul legat de notificare (OPTIONAL, dar foarte util pentru link in Frontend)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "organizer", "gallery"}) // Ignoram campurile grele
     private Event event;
 
-    @Column(nullable = false)
+    // --- DATE ---
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
+
+    // --- AICI ERA LIPSA: ENUM-UL DIN CERINTA MA-39 ---
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NotificationType type;
+    // --------------------------------------------------
 
     @Column(name = "is_read")
     @Builder.Default

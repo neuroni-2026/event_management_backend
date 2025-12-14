@@ -1,8 +1,10 @@
 package ro.proiect.event_management.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import ro.proiect.event_management.entity.Ticket;
+import ro.proiect.event_management.entity.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +24,8 @@ public interface TicketRepository extends JpaRepository <Ticket, Long>
 
     // 4. CHECK DUPLICATE: Verifica daca studentul are deja bilet
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
+
+    // Query custom: Gaseste toti userii care au bilet la un event specific
+    @Query("SELECT t.user FROM Ticket t WHERE t.event.id = :eventId")
+    List<User> findUsersByEventId(Long eventId);
 }

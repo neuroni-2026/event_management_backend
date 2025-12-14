@@ -1,6 +1,8 @@
 package ro.proiect.event_management.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,10 @@ public class TicketController
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Obține un bilet (Doar Studenți)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Bilet achiziționat cu succes"),
+            @ApiResponse(responseCode = "400", description = "Eroare la achiziție (ex: sold out)")
+    })
     public ResponseEntity<?> purchaseTicket(@RequestBody PurchaseTicketRequest request)
     {
         try
@@ -56,6 +62,7 @@ public class TicketController
     @GetMapping("/my-tickets")
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Obține biletele înregistrate de studentul curent")
+    @ApiResponse(responseCode = "200", description = "Lista biletelor mele")
     public List<TicketResponse> getMyTickets()
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -65,10 +72,10 @@ public class TicketController
 
     @GetMapping("/{id}")
     @Operation(summary = "Obține detalii despre un bilet specific", description = "Returnează detalii complete despre un bilet, dar doar dacă aparține utilizatorului autentificat.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Bilet găsit cu succes"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Biletul nu a fost găsit"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Nu ai permisiunea de a vizualiza acest bilet")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Bilet găsit cu succes"),
+            @ApiResponse(responseCode = "404", description = "Biletul nu a fost găsit"),
+            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea de a vizualiza acest bilet")
     })
     public ResponseEntity<?> getTicketById(@PathVariable Long id) {
         // 1. Aflam cine este userul logat

@@ -10,9 +10,9 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository <Notification, Long>
 {
 
-    // Returneaza notificarile userului, ordonate descrescator dupa data (cele noi sus)
-    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
+    // Gaseste toate notificarile unui user, ordonate cronologic invers (cele noi sus)
+    List<Notification> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
-    // Optional: Numara cate notificari necitite are userul (pentru badge-ul rosu)
+    // Optional: Numarul de notificari necitite (pentru un badge rosu in frontend)
     long countByUserIdAndIsReadFalse(Long userId);
 }

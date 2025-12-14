@@ -33,30 +33,41 @@ public class AuthTokenFilter extends OncePerRequestFilter
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                // 1. Extragem username-ul din token
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
+                // 2. Incarcam userul din Baza de Date
+                // --- VERIFICA DACA AI LINIILE ASTEA: ---
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                // 3. Cream obiectul de autentificare
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
+                // 4. Setam userul in contextul de securitate (ASTA E LINIA CRITICA!)
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                // ----------------------------------------
+
+                System.out.println("DEBUG JWT Filter: Token Valid! User: " + username);
+                System.out.println("DEBUG JWT Filter: Authorities: " + userDetails.getAuthorities());
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e.getMessage());
+            logger.error("Cannot set user authentication: {}", e);
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String parseJwt(HttpServletRequest request) {
+    private String parseJwt(HttpServletRequest request)
+    {
         String headerAuth = request.getHeader("Authorization");
 
-        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer "))
+        {
             return headerAuth.substring(7);
         }
 

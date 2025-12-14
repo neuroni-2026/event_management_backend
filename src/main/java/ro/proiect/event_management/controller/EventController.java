@@ -41,7 +41,8 @@ public class EventController
             @ApiResponse(responseCode = "200", description = "Eveniment găsit cu succes"),
             @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
     })
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+    public ResponseEntity<Event> getEventById(@PathVariable Long id)
+    {
         return eventRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -49,6 +50,7 @@ public class EventController
 
     @GetMapping
     @Operation(summary = "Obține toate evenimentele publice")
+    @ApiResponse(responseCode = "200", description = "Lista tuturor evenimentelor publice")
     public List<Event> getAllEvents()
     {
         return eventService.getAllPublicEvents();
@@ -57,6 +59,10 @@ public class EventController
     @PostMapping
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Creează un eveniment nou (Doar Organizatori)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Eveniment creat cu succes (în așteptare de aprobare)"),
+            @ApiResponse(responseCode = "403", description = "Acces interzis (Doar organizatorii pot crea evenimente)")
+    })
     public ResponseEntity<?> createEvent(@RequestBody CreateEventRequest request)
     {
         // Extragem ID-ul userului logat
@@ -72,7 +78,9 @@ public class EventController
     @GetMapping("/my-events")
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Vezi evenimentele create de mine (Organizator)")
-    public List<Event> getMyEvents() {
+    @ApiResponse(responseCode = "200", description = "Lista evenimentelor mele")
+    public List<Event> getMyEvents()
+    {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         return eventService.getMyEvents(userDetails.getId());
@@ -82,13 +90,22 @@ public class EventController
     @DeleteMapping("/{eventId}")
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Șterge un eveniment propriu")
-    public ResponseEntity<?> deleteEvent(@PathVariable Long eventId) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Eveniment șters cu succes"),
+            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea să ștergi acest eveniment"),
+            @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
+    })
+    public ResponseEntity<?> deleteEvent(@PathVariable Long eventId)
+    {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        try {
+        try
+        {
             eventService.deleteEvent(eventId, userDetails.getId());
             return ResponseEntity.ok(new MessageResponse("Event deleted successfully!"));
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             return ResponseEntity.status(403).body(new MessageResponse(e.getMessage()));
         }
     }
@@ -97,13 +114,22 @@ public class EventController
     @PutMapping("/{eventId}")
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Editează un eveniment propriu")
-    public ResponseEntity<?> updateEvent(@PathVariable Long eventId, @RequestBody CreateEventRequest request) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Eveniment actualizat cu succes"),
+            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea să editezi acest eveniment"),
+            @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
+    })
+    public ResponseEntity<?> updateEvent(@PathVariable Long eventId, @RequestBody CreateEventRequest request)
+    {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        try {
+        try
+        {
             eventService.updateEvent(eventId, userDetails.getId(), request);
             return ResponseEntity.ok(new MessageResponse("Event updated successfully!"));
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             return ResponseEntity.status(403).body(new MessageResponse(e.getMessage()));
         }
     }

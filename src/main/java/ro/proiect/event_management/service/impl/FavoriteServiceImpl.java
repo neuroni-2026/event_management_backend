@@ -30,7 +30,8 @@ public class FavoriteServiceImpl implements FavoriteService
     public void addFavorite(Long eventId, Long userId)
     {
         // 1. Verificam daca e deja favorit (ca sa nu avem duplicate)
-        if (favoriteRepository.existsByUserIdAndEventId(userId, eventId)) {
+        if (favoriteRepository.existsByUserIdAndEventId(userId, eventId))
+        {
             throw new RuntimeException("Event is already in favorites!");
         }
 

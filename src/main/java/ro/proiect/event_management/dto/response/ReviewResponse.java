@@ -23,7 +23,8 @@ public class ReviewResponse
     @Data
     @AllArgsConstructor
     @Builder
-    public static class ReviewerDto {
+    public static class ReviewerDto
+    {
         private Long id;
         private String firstName;
         private String lastName;

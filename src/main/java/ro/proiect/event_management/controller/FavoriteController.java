@@ -1,6 +1,8 @@
 package ro.proiect.event_management.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +26,8 @@ public class FavoriteController
     private FavoriteService favoriteService;
 
     // Helper: Extrage ID-ul userului logat
-    private Long getLoggedUserId() {
+    private Long getLoggedUserId()
+    {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userDetails.getId();
     }
@@ -34,6 +37,10 @@ public class FavoriteController
     @PostMapping("/{eventId}")
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Adaugă eveniment la favorite")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Adăugat la favorite cu succes"),
+            @ApiResponse(responseCode = "400", description = "Eroare la adăugare (ex: deja existent)")
+    })
     public ResponseEntity<?> addFavorite(@PathVariable Long eventId)
     {
         try
@@ -52,6 +59,10 @@ public class FavoriteController
     @DeleteMapping("/{eventId}")
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Șterge eveniment din favorite")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Șters din favorite cu succes"),
+            @ApiResponse(responseCode = "400", description = "Eroare la ștergere")
+    })
     public ResponseEntity<?> removeFavorite(@PathVariable Long eventId)
     {
         try
@@ -70,6 +81,7 @@ public class FavoriteController
     @GetMapping
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Vezi lista mea de favorite")
+    @ApiResponse(responseCode = "200", description = "Lista favoritelor")
     public List<FavoriteResponse> getMyFavorites()
     {
         return favoriteService.getMyFavorites(getLoggedUserId());
@@ -80,6 +92,7 @@ public class FavoriteController
     @GetMapping("/check/{eventId}")
     @PreAuthorize("hasRole('STUDENT')")
     @Operation(summary = "Verifică dacă un eveniment este favorit")
+    @ApiResponse(responseCode = "200", description = "Returnează true/false")
     public ResponseEntity<Boolean> checkFavorite(@PathVariable Long eventId)
     {
         boolean isFav = favoriteService.isFavorite(eventId, getLoggedUserId());

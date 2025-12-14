@@ -1,6 +1,8 @@
 package ro.proiect.event_management.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,10 @@ public class AuthController
     // 1. LOGIN
     @PostMapping("/signin")
     @Operation(summary = "Autentificare utilizator și generare token JWT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Autentificare reușită"),
+            @ApiResponse(responseCode = "401", description = "Credențiale invalide")
+    })
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest)
     {
 
@@ -86,6 +92,10 @@ public class AuthController
     // 2. REGISTER
     @PostMapping("/signup")
     @Operation(summary = "Înregistrare utilizator nou (Student sau Organizator)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilizator înregistrat cu succes"),
+            @ApiResponse(responseCode = "400", description = "Email deja existent sau date invalide")
+    })
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest)
     {
         try

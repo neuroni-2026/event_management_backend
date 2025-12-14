@@ -24,7 +24,8 @@ public class UserServiceImpl implements UserService
     public void registerUser(SignupRequest signUpRequest)
     {
         // 1. Verificam daca emailul exista deja
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+        if (userRepository.existsByEmail(signUpRequest.getEmail()))
+        {
             throw new RuntimeException("Error: Email is already in use!");
         }
 

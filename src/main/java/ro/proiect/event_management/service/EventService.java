@@ -24,6 +24,8 @@ public interface EventService
 
     void approveEvent(Long eventId);
 
+    void rejectEvent(Long eventId,String reason);
+
 
 
 }

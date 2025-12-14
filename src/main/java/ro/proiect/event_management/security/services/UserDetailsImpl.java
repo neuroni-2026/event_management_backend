@@ -25,7 +25,8 @@ public class UserDetailsImpl implements UserDetails
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(Long id, String username, String email, String password,
-                           Collection<? extends GrantedAuthority> authorities) {
+                           Collection<? extends GrantedAuthority> authorities)
+    {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -51,7 +52,8 @@ public class UserDetailsImpl implements UserDetails
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public Collection<? extends GrantedAuthority> getAuthorities()
+    {
         return authorities;
     }
 
@@ -60,46 +62,54 @@ public class UserDetailsImpl implements UserDetails
         return id;
     }
 
-    public String getEmail() {
+    public String getEmail()
+    {
         return email;
     }
 
     @Override
-    public String getPassword() {
+    public String getPassword()
+    {
         return password;
     }
 
     @Override
-    public String getUsername() {
+    public String getUsername()
+    {
         return username;
     }
 
     // Contul nu expira niciodata in demo-ul nostru
     @Override
-    public boolean isAccountNonExpired() {
+    public boolean isAccountNonExpired()
+    {
         return true;
     }
 
     // Contul nu e blocat
     @Override
-    public boolean isAccountNonLocked() {
+    public boolean isAccountNonLocked()
+    {
         return true;
     }
 
     // Credentialele nu expira
     @Override
-    public boolean isCredentialsNonExpired() {
+    public boolean isCredentialsNonExpired()
+    {
         return true;
     }
 
     // Contul e activ
     @Override
-    public boolean isEnabled() {
+    public boolean isEnabled()
+    {
         return true;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())

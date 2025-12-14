@@ -1,12 +1,11 @@
 package ro.proiect.event_management.service.impl;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ro.proiect.event_management.dto.request.PurchaseTicketRequest;
 import ro.proiect.event_management.dto.response.TicketResponse;
-import ro.proiect.event_management.entity.Event;
-import ro.proiect.event_management.entity.Ticket;
-import ro.proiect.event_management.entity.User;
+import ro.proiect.event_management.entity.*;
 import ro.proiect.event_management.repository.EventRepository;
 import ro.proiect.event_management.repository.TicketRepository;
 import ro.proiect.event_management.repository.UserRepository;
@@ -33,6 +32,7 @@ public class TicketServiceImpl implements TicketService
     private NotificationService notificationService;
 
     @Override
+    @Transactional
     public TicketResponse purchaseTicket(PurchaseTicketRequest request, Long userId)
     {
         // 1. Gasim Evenimentul
@@ -40,13 +40,15 @@ public class TicketServiceImpl implements TicketService
                 .orElseThrow(() -> new RuntimeException("Error: Event not found."));
 
         // 2. VALIDARE: Studentul are deja bilet?
-        if (ticketRepository.existsByUserIdAndEventId(userId, event.getId())) {
+        if (ticketRepository.existsByUserIdAndEventId(userId, event.getId()))
+        {
             throw new RuntimeException("Error: You already have a ticket for this event!");
         }
 
         // 3. VALIDARE: Mai sunt locuri?
         int soldTickets = ticketRepository.findByEventId(event.getId()).size();
-        if (event.getMaxCapacity() != null && soldTickets >= event.getMaxCapacity()) {
+        if (event.getMaxCapacity() != null && soldTickets >= event.getMaxCapacity())
+        {
             throw new RuntimeException("Error: Event is sold out!");
         }
 
@@ -71,7 +73,16 @@ public class TicketServiceImpl implements TicketService
         System.out.println("DEBUG: Bilet salvat pentru User ID: " + userId);
 
         String message = "Felicitari! Ti-ai asigurat locul la evenimentul: " + event.getTitle();
-        notificationService.createNotification(student, message);
+        Notification notification = Notification.builder()
+                .user(student)
+                .event(event)               // Legam notificarea de eveniment (util pt frontend)
+                .message(message)
+                .type(NotificationType.INFO) // Setam tipul (foloseste INFO sau creeaza TICKET_PURCHASED)
+                .isRead(false)
+                .build();
+
+                // Acum apelam serviciul cu obiectul creat
+        notificationService.createNotification(notification);
 
         System.out.println("DEBUG: Am apelat createNotification.");
         // -----------------------------------

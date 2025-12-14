@@ -35,7 +35,8 @@ public class ReviewServiceImpl implements ReviewService
                 .orElseThrow(() -> new RuntimeException("Error: Event not found."));
 
         // 2. Verificam daca a mai lasat recenzie (Duplicate check)
-        if (reviewRepository.existsByUserIdAndEventId(userId, event.getId())) {
+        if (reviewRepository.existsByUserIdAndEventId(userId, event.getId()))
+        {
             throw new RuntimeException("Error: You already reviewed this event!");
         }
 
@@ -55,10 +56,12 @@ public class ReviewServiceImpl implements ReviewService
     }
 
     @Override
-    public List<ReviewResponse> getReviewsByEvent(Long eventId) {
+    public List<ReviewResponse> getReviewsByEvent(Long eventId)
+    {
         List<Review> reviews = reviewRepository.findByEventId(eventId);
 
-        return reviews.stream().map(review -> {
+        return reviews.stream().map(review ->
+        {
             User user = review.getUser();
 
             // Construim ReviewerDto folosind builder

@@ -3,34 +3,44 @@ package ro.proiect.event_management.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ro.proiect.event_management.entity.Notification;
-import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.repository.NotificationRepository;
 import ro.proiect.event_management.service.NotificationService;
 
 import java.util.List;
 
 @Service
-public class NotificationServiceImpl implements NotificationService
-{
+public class NotificationServiceImpl implements NotificationService {
+
     @Autowired
     private NotificationRepository notificationRepository;
 
     @Override
-    public void createNotification(User user, String message)
-    {
-        Notification notification = Notification.builder()
-                .user(user)
-                .message(message)
-                .isRead(false) // Initial e necitita
-                .build();
+    public List<Notification> getMyNotifications(Long userId) {
+        return notificationRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+    }
 
+    @Override
+    public void markAsRead(Long notificationId, Long userId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Error: Notification not found."));
+
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Error: You cannot modify a notification that is not yours!");
+        }
+
+        notification.setIsRead(true);
         notificationRepository.save(notification);
     }
 
     @Override
-    public List<Notification> getMyNotifications(Long userId)
-    {
-        // Le returnam ordonate descrescator (cele noi sus)
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public long getUnreadCount(Long userId) {
+        return notificationRepository.countByUserIdAndIsReadFalse(userId);
+    }
+
+    // --- CORECTIA ESTE AICI ---
+    // Aceasta metoda trebuie sa fie identica cu cea din Interfata
+    @Override
+    public void createNotification(Notification notification) {
+        notificationRepository.save(notification);
     }
 }

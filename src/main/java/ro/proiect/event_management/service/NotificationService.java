@@ -8,8 +8,11 @@ import java.util.List;
 public interface NotificationService
 {
     //metoda interna
-    void createNotification(User user, String message);
+    void createNotification(Notification notification);
 
     //metoda pentru utilizator
     List<Notification> getMyNotifications(Long userId);
+
+    void markAsRead(Long notificationId, Long userId);
+    long getUnreadCount(Long userId);
 }

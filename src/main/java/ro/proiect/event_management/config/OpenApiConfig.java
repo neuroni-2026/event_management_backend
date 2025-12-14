@@ -10,10 +10,12 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 @Configuration
-public class OpenApiConfig {
+public class OpenApiConfig
+{
 
     @Bean
-    public OpenAPI myOpenAPI() {
+    public OpenAPI myOpenAPI()
+    {
         // 1. Configurarea Serverului (URL-ul de baza)
         Server devServer = new Server();
         devServer.setUrl("http://localhost:8080");
@@ -21,7 +23,7 @@ public class OpenApiConfig {
 
         // 2. Configurarea Informatiilor de Contact (Optional)
         Contact contact = new Contact();
-//        contact.setEmail("student@upb.ro");
+//        contact.setEmail("bogdan.rusu1@student.usv.ro");
 //        contact.setName("Echipa Proiect");
 
         // 3. Configurarea Titlului si Descrierii Generale
