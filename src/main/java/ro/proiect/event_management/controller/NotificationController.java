@@ -45,10 +45,13 @@ public class NotificationController
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        try {
+        try
+        {
             notificationService.markAsRead(id, userDetails.getId());
             return ResponseEntity.ok("Notificare marcată ca citită.");
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

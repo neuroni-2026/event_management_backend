@@ -67,7 +67,8 @@ public class AdminController
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Obține toate evenimentele (Admin)")
     @ApiResponse(responseCode = "200", description = "Lista tuturor evenimentelor")
-    public List<Event> getAllEventsAdmin() {
+    public List<Event> getAllEventsAdmin()
+    {
         return eventRepository.findAll();
     }
 

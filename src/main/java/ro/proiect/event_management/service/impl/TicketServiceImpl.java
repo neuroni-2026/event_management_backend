@@ -9,9 +9,11 @@ import ro.proiect.event_management.entity.*;
 import ro.proiect.event_management.repository.EventRepository;
 import ro.proiect.event_management.repository.TicketRepository;
 import ro.proiect.event_management.repository.UserRepository;
+import ro.proiect.event_management.service.EmailService;
 import ro.proiect.event_management.service.NotificationService;
 import ro.proiect.event_management.service.TicketService;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,6 +32,9 @@ public class TicketServiceImpl implements TicketService
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     @Transactional
@@ -70,7 +75,7 @@ public class TicketServiceImpl implements TicketService
 
         ticketRepository.save(ticket);
 
-        System.out.println("DEBUG: Bilet salvat pentru User ID: " + userId);
+
 
         String message = "Felicitari! Ti-ai asigurat locul la evenimentul: " + event.getTitle();
         Notification notification = Notification.builder()
@@ -84,8 +89,27 @@ public class TicketServiceImpl implements TicketService
                 // Acum apelam serviciul cu obiectul creat
         notificationService.createNotification(notification);
 
-        System.out.println("DEBUG: Am apelat createNotification.");
-        // -----------------------------------
+        try
+        {
+            // Formatam data sa arate frumos in mail (ex: 25 Dec 2024, 18:00)
+            String formattedDate = event.getStartTime().format(DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm"));
+
+            emailService.sendTicketEmail(
+                    student.getEmail(),       // Unde trimitem
+                    student.getFirstName(),   // Nume student
+                    event.getTitle(),      // Titlu Eveniment
+                    event.getLocation(),   // Locatie
+                    formattedDate,         // Data
+                    ticket.getQrCode()     // Continut QR
+            );
+        }
+        catch (Exception e)
+        {
+            // Prindem orice eroare ca sa nu anulam cumpararea biletului doar pt ca nu a mers mailul
+            System.err.println("Nu s-a putut trimite emailul: " + e.getMessage());
+        }
+
+
 
         // 7. Returnam DTO-ul
         return new TicketResponse(

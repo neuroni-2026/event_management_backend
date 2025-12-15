@@ -9,22 +9,26 @@ import ro.proiect.event_management.service.NotificationService;
 import java.util.List;
 
 @Service
-public class NotificationServiceImpl implements NotificationService {
+public class NotificationServiceImpl implements NotificationService
+{
 
     @Autowired
     private NotificationRepository notificationRepository;
 
     @Override
-    public List<Notification> getMyNotifications(Long userId) {
+    public List<Notification> getMyNotifications(Long userId)
+    {
         return notificationRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Override
-    public void markAsRead(Long notificationId, Long userId) {
+    public void markAsRead(Long notificationId, Long userId)
+    {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Error: Notification not found."));
 
-        if (!notification.getUser().getId().equals(userId)) {
+        if (!notification.getUser().getId().equals(userId))
+        {
             throw new RuntimeException("Error: You cannot modify a notification that is not yours!");
         }
 
@@ -33,14 +37,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public long getUnreadCount(Long userId) {
+    public long getUnreadCount(Long userId)
+    {
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
 
-    // --- CORECTIA ESTE AICI ---
-    // Aceasta metoda trebuie sa fie identica cu cea din Interfata
     @Override
-    public void createNotification(Notification notification) {
+    public void createNotification(Notification notification)
+    {
         notificationRepository.save(notification);
     }
 }

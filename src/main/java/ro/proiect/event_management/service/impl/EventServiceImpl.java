@@ -78,7 +78,8 @@ public class EventServiceImpl implements EventService
 
     @Override
     @Transactional
-    public void approveEvent(Long eventId) {
+    public void approveEvent(Long eventId)
+    {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Error: Event not found."));
 
@@ -100,7 +101,8 @@ public class EventServiceImpl implements EventService
 
     @Override
     @Transactional
-    public void rejectEvent(Long eventId, String reason) {
+    public void rejectEvent(Long eventId, String reason)
+    {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Error: Event not found."));
 
@@ -137,7 +139,8 @@ public class EventServiceImpl implements EventService
 
     @Override
     @Transactional // Important pentru ca facem mai multe operatii DB
-    public void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData) {
+    public void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData)
+    {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
@@ -176,7 +179,8 @@ public class EventServiceImpl implements EventService
         }
     }
 
-    private void notifyParticipants(Event event, boolean locChanged, boolean timeChanged) {
+    private void notifyParticipants(Event event, boolean locChanged, boolean timeChanged)
+    {
         // Gasim studentii cu bilet
         List<User> participants = ticketRepository.findUsersByEventId(event.getId());
 
