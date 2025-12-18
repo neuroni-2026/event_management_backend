@@ -22,8 +22,8 @@ public class EmailService
     @Autowired
     private QRCodeGenerator qrCodeGenerator;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    //@Value("${spring.mail.username}")
+    private String fromEmail="bogdan.rusu1@student.usv.ro";
 
     @Async // Ruleaza pe alt thread
     public void sendTicketEmail(String toEmail, String userName, String eventTitle, String eventLocation, String eventDate, String ticketCode)
