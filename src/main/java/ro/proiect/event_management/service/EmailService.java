@@ -1,66 +1,84 @@
 package ro.proiect.event_management.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import com.mailjet.client.ClientOptions;
+import com.mailjet.client.MailjetClient;
+import com.mailjet.client.MailjetRequest;
+import com.mailjet.client.MailjetResponse;
+import com.mailjet.client.errors.MailjetException;
+import com.mailjet.client.resource.Emailv31;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import ro.proiect.event_management.util.QRCodeGenerator;
 
-import java.io.UnsupportedEncodingException;
+import java.util.Base64;
 
 @Service
-public class EmailService
-{
-    @Autowired
-    private JavaMailSender mailSender;
+public class EmailService {
 
     @Autowired
     private QRCodeGenerator qrCodeGenerator;
 
-    //@Value("${spring.mail.username}")
-    private String fromEmail="bogdan.rusu1@student.usv.ro";
+    // Citim cheile API direct din variabilele de mediu Railway
+    @Value("${MAIL_USERNAME}")
+    private String apiKey;
 
-    @Async // Ruleaza pe alt thread
-    public void sendTicketEmail(String toEmail, String userName, String eventTitle, String eventLocation, String eventDate, String ticketCode)
-    {
+    @Value("${MAIL_PASSWORD}")
+    private String secretKey;
+
+    @Async
+    public void sendTicketEmail(String toEmail, String userName, String eventTitle, String eventLocation, String eventDate, String ticketCode) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            // true = multipart (pentru imagini inline)
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            // 1. Configurare Client Mailjet (API HTTP)
+            ClientOptions options = ClientOptions.builder()
+                    .apiKey(apiKey)
+                    .apiSecretKey(secretKey)
+                    .build();
 
-            helper.setFrom(fromEmail,"EventManagement-NoReply");
+            MailjetClient client = new MailjetClient(options);
 
-            helper.setTo(toEmail);
-            helper.setSubject("🎟️ Biletul tău pentru: " + eventTitle);
-
-            // 1. Generam QR Code-ul
+            // 2. Generare QR Code si conversie in Base64 (pentru a-l pune direct in HTML)
             byte[] qrImage = qrCodeGenerator.generateQRCodeImage(ticketCode, 200, 200);
+            String base64QRCode = Base64.getEncoder().encodeToString(qrImage);
+            String qrImageSrc = "data:image/png;base64," + base64QRCode;
 
-            // 2. Construim HTML-ul
-            String htmlContent = buildHtmlEmail(userName, eventTitle, eventLocation, eventDate, ticketCode);
+            // 3. Construire HTML
+            String htmlContent = buildHtmlEmail(userName, eventTitle, eventLocation, eventDate, ticketCode, qrImageSrc);
 
-            helper.setText(htmlContent, true);
+            // 4. Construire Request Mailjet
+            MailjetRequest request = new MailjetRequest(Emailv31.resource)
+                    .property(Emailv31.MESSAGES, new JSONArray()
+                            .put(new JSONObject()
+                                    .put(Emailv31.Message.FROM, new JSONObject()
+                                            .put("Email", "bogdanrusu9070@gmail.com") // ⚠️ PUNE ADRESA TA VALIDATA DE MAILJET AICI
+                                            .put("Name", "Event Management"))
+                                    .put(Emailv31.Message.TO, new JSONArray()
+                                            .put(new JSONObject()
+                                                    .put("Email", toEmail)
+                                                    .put("Name", userName)))
+                                    .put(Emailv31.Message.SUBJECT, "🎟️ Biletul tău pentru: " + eventTitle)
+                                    .put(Emailv31.Message.HTMLPART, htmlContent)
+                            ));
 
-            // 3. Atasam imaginea cu ID unic "qrCodeImage" folosit in HTML
-            helper.addInline("qrCodeImage", new ByteArrayResource(qrImage), "image/png");
+            // 5. Trimite (Nu se blocheaza pe Railway!)
+            MailjetResponse response = client.post(request);
 
-            mailSender.send(message);
-            System.out.println("Email trimis cu succes catre: " + toEmail);
+            if (response.getStatus() == 200) {
+                System.out.println("Email trimis cu succes catre: " + toEmail);
+            } else {
+                System.err.println("Eroare Mailjet: " + response.getStatus() + " - " + response.getData());
+            }
 
-        }
-        catch (MessagingException | UnsupportedEncodingException e)
-        {
-            System.err.println("Eroare la trimiterea emailului: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Eroare critica la trimiterea emailului: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    private String buildHtmlEmail(String name, String title, String location, String date, String code)
-    {
+    private String buildHtmlEmail(String name, String title, String location, String date, String code, String qrImageSrc) {
         return "" +
                 "<div style=\"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;\">" +
                 "  <div style=\"background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">" +
@@ -78,7 +96,7 @@ public class EmailService
                 "      </div>" +
                 "      <div style=\"text-align: center; margin: 30px 0;\">" +
                 "        <p style=\"font-size: 14px; color: #888; margin-bottom: 10px;\">Prezintă acest cod QR la intrare:</p>" +
-                "        <img src=\"cid:qrCodeImage\" alt=\"QR Code\" style=\"border: 1px solid #ddd; padding: 5px; border-radius: 4px;\"/>" +
+                "        <img src=\"" + qrImageSrc + "\" alt=\"QR Code\" style=\"border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 200px; height: 200px;\"/>" +
                 "      </div>" +
                 "    </div>" +
                 "    <div style=\"background-color: #eeeeee; padding: 15px; text-align: center; font-size: 12px; color: #777;\">" +
@@ -87,5 +105,4 @@ public class EmailService
                 "  </div>" +
                 "</div>";
     }
-
 }
