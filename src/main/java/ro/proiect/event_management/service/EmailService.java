@@ -53,7 +53,7 @@ public class EmailService {
                     .property(Emailv31.MESSAGES, new JSONArray()
                             .put(new JSONObject()
                                     .put(Emailv31.Message.FROM, new JSONObject()
-                                            .put("Email", "bogdanrusu9070@gmail.com") // ⚠️ PUNE ADRESA TA VALIDATA DE MAILJET AICI
+                                            .put("Email", "bogdan.rusu1@student.usv.ro") // ⚠️ PUNE ADRESA TA VALIDATA DE MAILJET AICI
                                             .put("Name", "Event Management"))
                                     .put(Emailv31.Message.TO, new JSONArray()
                                             .put(new JSONObject()
