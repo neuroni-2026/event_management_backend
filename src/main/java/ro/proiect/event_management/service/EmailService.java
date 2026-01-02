@@ -23,11 +23,11 @@ public class EmailService
     @Autowired
     private QRCodeGenerator qrCodeGenerator;
 
-    @Value("${MAIL_USERNAME}")
-    private String apiKey;
+    //@Value("${MAIL_USERNAME}")
+    private String apiKey="00ea14d153767da0b960a7caa8d62063";
 
-    @Value("${MAIL_PASSWORD}")
-    private String secretKey;
+    //@Value("${MAIL_PASSWORD}")
+    private String secretKey="96542abbe388cfb873ee58dce15615dd";
 
     @Async
     public void sendTicketEmail(String toEmail, String userName, String eventTitle, String eventLocation, String eventDate, String ticketCode)

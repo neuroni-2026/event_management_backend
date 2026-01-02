@@ -1,14 +1,14 @@
 package ro.proiect.event_management.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*; // Am schimbat importurile Lombok ca sa includa ToString
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -24,7 +24,6 @@ public class Event
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id", nullable = false)
-    // Aceasta linie ii spune lui Jackson sa ignore gunoiul din Hibernate Proxy
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User organizer;
 
@@ -60,4 +59,36 @@ public class Event
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    // ========================================================================
+    // MAI JOS SUNT LINIILE NOI PENTRU STERGEREA IN CASCADA
+    // ========================================================================
+
+    // 1. Relatia cu NOTIFICARILE (Rezolva eroarea ta curenta)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore       // Previne bucla infinita in JSON
+    @ToString.Exclude // Previne bucla infinita in log-uri (Lombok)
+    @Builder.Default  // Important pentru Lombok Builder
+    private List<Notification> notifications = new ArrayList<>();
+
+    // 2. Relatia cu BILETELE
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @ToString.Exclude
+    @Builder.Default
+    private List<Ticket> tickets = new ArrayList<>();
+
+    // 3. Relatia cu REVIEW-urile
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @ToString.Exclude
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
+
+    // 4. Relatia cu FAVORITE
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @ToString.Exclude
+    @Builder.Default
+    private List<Favorite> favorites = new ArrayList<>();
 }
