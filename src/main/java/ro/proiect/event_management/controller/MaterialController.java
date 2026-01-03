@@ -57,77 +57,26 @@ public class MaterialController
     }
 
     // 2. STERGE UN MATERIAL SPECIFIC
-    @DeleteMapping("/{materialId}")
-    @PreAuthorize("hasRole('ORGANIZER')")
-    @Operation(summary = "Șterge un material specific")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Material șters cu succes"),
-            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea"),
-            @ApiResponse(responseCode = "404", description = "Materialul nu există")
-    })
-    public ResponseEntity<?> deleteMaterial(@PathVariable Long materialId)
-    {
-        try
+        @DeleteMapping("/{materialId}")
+        @PreAuthorize("hasRole('ORGANIZER')")
+        @Operation(summary = "Șterge un material specific")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Material șters cu succes"),
+                @ApiResponse(responseCode = "403", description = "Nu ai permisiunea"),
+                @ApiResponse(responseCode = "404", description = "Materialul nu există")
+        })
+        public ResponseEntity<?> deleteMaterial(@PathVariable Long materialId)
         {
-            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            eventService.deleteMaterial(materialId, userDetails.getId());
-
-            return ResponseEntity.ok(new MessageResponse("Material deleted successfully!"));
-        }
-        catch (RuntimeException e)
-        {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
-    }
-
-    @GetMapping("/download/{materialId}")
-    @Operation(summary = "Descarcă un material prin proxy server")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadMaterial(@PathVariable Long materialId)
-    {
-        try
-        {
-            var material = eventService.getMaterialById(materialId);
-            String urlString = material.getFileUrl();
-            java.io.InputStream in;
-            
             try
             {
-                in = openConnection(urlString);
+                UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                eventService.deleteMaterial(materialId, userDetails.getId());
+    
+                return ResponseEntity.ok(new MessageResponse("Material deleted successfully!"));
             }
-            catch (Exception e)
+            catch (RuntimeException e)
             {
-                System.err.println("Primary download failed for: " + urlString + " Error: " + e.getMessage());
-                // Fallback logic
-                String altUrlString;
-                if (urlString.contains("/raw/upload/")) {
-                    altUrlString = urlString.replace("/raw/upload/", "/image/upload/");
-                } else if (urlString.contains("/image/upload/")) {
-                    altUrlString = urlString.replace("/image/upload/", "/raw/upload/");
-                } else {
-                    throw e;
-                }
-                
-                System.out.println("Retry download with URL: " + altUrlString);
-                in = openConnection(altUrlString);
+                return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
             }
-
-            return ResponseEntity.ok()
-                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getFileName() + "\"")
-                    .body(new org.springframework.core.io.InputStreamResource(in));
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().build();
         }
     }
-
-    private java.io.InputStream openConnection(String urlString) throws java.io.IOException
-    {
-        java.net.URL url = new java.net.URL(urlString);
-        java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
-        // Setăm User-Agent pentru a nu fi blocați de Cloudinary
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-        return connection.getInputStream();
-    }
-}
