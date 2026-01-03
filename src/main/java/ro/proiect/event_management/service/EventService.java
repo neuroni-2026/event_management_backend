@@ -1,5 +1,6 @@
 package ro.proiect.event_management.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
 import ro.proiect.event_management.entity.Event;
 
@@ -12,7 +13,7 @@ public interface EventService
 
     // ORGANIZER
     //metoda pentru organizatorii de creare a evenimentelor
-    Event createEvent(CreateEventRequest request, Long organizerId);
+    Event createEvent(CreateEventRequest request, Long organizerId, List<MultipartFile> files);
 
     void deleteEvent(Long eventId, Long organizerId);
 
@@ -26,6 +27,10 @@ public interface EventService
 
     void rejectEvent(Long eventId,String reason);
 
+    // MATERIALE
+    void addMaterials(Long eventId, Long organizerId, List<MultipartFile> files);
+    void deleteMaterial(Long materialId, Long organizerId);
 
+    ro.proiect.event_management.entity.Material getMaterialById(Long materialId);
 
 }

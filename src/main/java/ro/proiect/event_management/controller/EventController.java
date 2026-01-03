@@ -1,22 +1,25 @@
 package ro.proiect.event_management.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
 import ro.proiect.event_management.dto.response.MessageResponse;
 import ro.proiect.event_management.entity.Event;
-import ro.proiect.event_management.entity.EventCategory;
-import ro.proiect.event_management.entity.EventStatus;
-import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.repository.EventRepository;
-import ro.proiect.event_management.repository.UserRepository;
 import ro.proiect.event_management.security.services.UserDetailsImpl;
 import ro.proiect.event_management.service.EventService;
 
@@ -34,13 +37,8 @@ public class EventController
     @Autowired
     private EventRepository eventRepository;
 
-    // În EventController.java
     @GetMapping("/{id}")
-    @Operation(summary = "Obține detalii despre un eveniment", description = "Returnează obiectul complet al unui eveniment pe baza ID-ului. Este folosit pentru pagina de detalii.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Eveniment găsit cu succes"),
-            @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
-    })
+    @Operation(summary = "Obține detalii despre un eveniment")
     public ResponseEntity<Event> getEventById(@PathVariable Long id)
     {
         return eventRepository.findById(id)
@@ -50,55 +48,78 @@ public class EventController
 
     @GetMapping
     @Operation(summary = "Obține toate evenimentele publice")
-    @ApiResponse(responseCode = "200", description = "Lista tuturor evenimentelor publice")
     public List<Event> getAllEvents()
     {
         return eventService.getAllPublicEvents();
     }
 
-    @PostMapping
+    // ========================================================================
+    // METODA NOUĂ PENTRU CREARE EVENIMENT CU FIȘIERE (MULTIPART)
+    // ========================================================================
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ORGANIZER')")
-    @Operation(summary = "Creează un eveniment nou (Doar Organizatori)")
+    @Operation(summary = "Creează un eveniment nou cu materiale (Doar Organizatori)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Eveniment creat cu succes (în așteptare de aprobare)"),
-            @ApiResponse(responseCode = "403", description = "Acces interzis (Doar organizatorii pot crea evenimente)")
+            @ApiResponse(responseCode = "200", description = "Eveniment creat cu succes"),
+            @ApiResponse(responseCode = "400", description = "Date invalide sau JSON formatat greșit"),
+            @ApiResponse(responseCode = "403", description = "Acces interzis")
     })
-    public ResponseEntity<?> createEvent(@RequestBody CreateEventRequest request)
+    public ResponseEntity<?> createEvent(
+            @Parameter(description = "Datele evenimentului în format JSON", content = @Content(mediaType = "application/json"))
+            @RequestPart("event") String eventRequestJson, // Primim JSON-ul ca String
+
+            @Parameter(description = "Lista de fișiere opționale (PDF, Imagini)")
+            @RequestPart(value = "files", required = false) List<MultipartFile> files // Fișierele
+    )
     {
-        // Extragem ID-ul userului logat
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try
+        {
+            // 1. Extragem ID-ul userului logat
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        // Apelam service-ul sa faca treaba
-        eventService.createEvent(request, userDetails.getId());
+            // 2. Convertim manual String-ul JSON în obiectul CreateEventRequest
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule()); // Important pentru LocalDateTime
+            CreateEventRequest request = mapper.readValue(eventRequestJson, CreateEventRequest.class);
 
-        return ResponseEntity.ok(new MessageResponse("Event created successfully! Pending Admin approval."));
+            // 3. Apelăm service-ul nou care știe să gestioneze și fișierele
+            eventService.createEvent(request, userDetails.getId(), files);
+
+            return ResponseEntity.ok(new MessageResponse("Event created successfully with materials! Pending Admin approval."));
+
+        }
+        catch (JsonProcessingException e)
+        {
+            return ResponseEntity.badRequest().body(new MessageResponse("Invalid JSON format: " + e.getMessage()));
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error creating event: " + e.getMessage()));
+        }
     }
 
     // 3. MY EVENTS (Organizer)
     @GetMapping("/my-events")
     @PreAuthorize("hasRole('ORGANIZER')")
-    @Operation(summary = "Vezi evenimentele create de mine (Organizator)")
-    @ApiResponse(responseCode = "200", description = "Lista evenimentelor mele")
+    @Operation(summary = "Obține evenimentele organizatorului curent")
+    @ApiResponse(responseCode = "200", description = "Lista evenimentelor create de organizator")
     public List<Event> getMyEvents()
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         return eventService.getMyEvents(userDetails.getId());
     }
 
     // 4. STERGE EVENIMENT
     @DeleteMapping("/{eventId}")
     @PreAuthorize("hasRole('ORGANIZER')")
-    @Operation(summary = "Șterge un eveniment propriu")
+    @Operation(summary = "Șterge un eveniment (Doar Organizatorul propriu)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Eveniment șters cu succes"),
-            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea să ștergi acest eveniment"),
-            @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
+            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea de a șterge acest eveniment")
     })
     public ResponseEntity<?> deleteEvent(@PathVariable Long eventId)
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         try
         {
             eventService.deleteEvent(eventId, userDetails.getId());
@@ -113,16 +134,14 @@ public class EventController
     // 5. EDITEAZA EVENIMENT
     @PutMapping("/{eventId}")
     @PreAuthorize("hasRole('ORGANIZER')")
-    @Operation(summary = "Editează un eveniment propriu")
+    @Operation(summary = "Actualizează un eveniment (Doar Organizatorul propriu)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Eveniment actualizat cu succes"),
-            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea să editezi acest eveniment"),
-            @ApiResponse(responseCode = "404", description = "Evenimentul nu a fost găsit")
+            @ApiResponse(responseCode = "403", description = "Nu ai permisiunea de a edita acest eveniment")
     })
     public ResponseEntity<?> updateEvent(@PathVariable Long eventId, @RequestBody CreateEventRequest request)
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         try
         {
             eventService.updateEvent(eventId, userDetails.getId(), request);

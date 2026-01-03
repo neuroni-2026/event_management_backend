@@ -16,7 +16,7 @@ public class OpenApiConfig
     @Bean
     public OpenAPI myOpenAPI()
     {
-        // 1. Configurarea Serverului (URL-ul de baza)
+        //  Configurarea Serverului (URL-ul de baza)
         Server devServer = new Server();
         devServer.setUrl("http://localhost:8080");
         devServer.setDescription("Server de Dezvoltare Local");
@@ -31,12 +31,12 @@ public class OpenApiConfig
                 .title("Sistem de Gestiune Evenimente Universitare API")
                 .version("1.0")
                 .contact(contact)
-                .description("Aceasta este documentația oficială pentru Backend-ul aplicației de proiect.\n\n" +
-                        "Aici găsiți toate endpoint-urile necesare pentru:\n" +
+                .description("Aceasta este documentatia oficiala pentru Backend-ul aplicatiei de proiect.\n\n" +
+                        "Aici gasiti toate endpoint-urile necesare pentru:\n" +
                         "- **Autentificare** (Login/Register)\n" +
                         "- **Evenimente** (CRUD, Aprobare)\n" +
-                        "- **Bilete** (Achiziție, QR Code)\n" +
-                        "- **Social** (Recenzii, Favorite, Notificări)");
+                        "- **Bilete** (Achizitie, QR Code)\n" +
+                        "- **Social** (Recenzii, Favorite, Notificari)");
 
         return new OpenAPI()
                 .info(info)

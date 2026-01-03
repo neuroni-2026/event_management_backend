@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ro.proiect.event_management.service.ImageService;
+import ro.proiect.event_management.service.CloudinaryService;
 
 import java.util.Map;
 
@@ -20,7 +20,7 @@ public class ImageController
 {
 
     @Autowired
-    private ImageService imageService;
+    private CloudinaryService cloudinaryService;
 
     // Endpoint pentru incarcarea imaginii
     // Frontend-ul trimite un fisier, Backend-ul raspunde cu un URL
@@ -34,7 +34,7 @@ public class ImageController
     {
         try
         {
-            String url = imageService.uploadImage(file);
+            String url = cloudinaryService.uploadImage(file);
 
             // Returnam un JSON simplu: { "url": "https://..." }
             return ResponseEntity.ok(Map.of("url", url));
@@ -43,6 +43,21 @@ public class ImageController
         catch (Exception e)
         {
             return ResponseEntity.badRequest().body("Eroare la upload: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete")
+    @Operation(summary = "Șterge o imagine de pe Cloudinary pe baza URL-ului")
+    public ResponseEntity<?> deleteImage(@RequestParam("url") String url)
+    {
+        try
+        {
+            cloudinaryService.deleteFile(url);
+            return ResponseEntity.ok(Map.of("message", "Image deleted successfully"));
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body("Error deleting image: " + e.getMessage());
         }
     }
 }

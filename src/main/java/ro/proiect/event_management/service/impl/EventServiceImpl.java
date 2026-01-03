@@ -3,12 +3,11 @@ package ro.proiect.event_management.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
 import ro.proiect.event_management.entity.*;
-import ro.proiect.event_management.repository.EventRepository;
-import ro.proiect.event_management.repository.NotificationRepository;
-import ro.proiect.event_management.repository.TicketRepository;
-import ro.proiect.event_management.repository.UserRepository;
+import ro.proiect.event_management.repository.*;
+import ro.proiect.event_management.service.CloudinaryService;
 import ro.proiect.event_management.service.EventService;
 import ro.proiect.event_management.service.NotificationService;
 
@@ -32,6 +31,13 @@ public class EventServiceImpl implements EventService
     @Autowired
     private NotificationService notificationService;
 
+    // --- DEPENDINTE NOI PENTRU MATERIALE ---
+    @Autowired
+    private MaterialRepository materialRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
     @Override
     public List<Event> getAllPublicEvents()
     {
@@ -39,24 +45,28 @@ public class EventServiceImpl implements EventService
     }
 
     @Override
-    public Event createEvent(CreateEventRequest request, Long organizerId)
+    @Transactional // <--- FOARTE IMPORTANT: Daca upload-ul esueaza, evenimentul nu se salveaza (Rollback)
+    // Am adaugat parametrul "files" la final
+    public Event createEvent(CreateEventRequest request, Long organizerId, List<MultipartFile> files)
     {
-        //gasim organizatorul
+        // 1. Gasim organizatorul (LOGICA TA INITIALA)
         User organizer = userRepository.findById(organizerId)
                 .orElseThrow(() -> new RuntimeException("Error: User not found."));
 
-        //coonstruim evenimentul
+        // 2. Construim evenimentul (LOGICA TA INITIALA)
         Event event = Event.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .location(request.getLocation())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
-                .imageUrl(request.getImageUrl())
+                .imageUrl(request.getImageUrl()) // Poza de coperta (URL string trimis din frontend)
+                .maxCapacity(request.getMaxCapacity()) // Am adaugat si asta daca era in request
                 .organizer(organizer)
                 .status(EventStatus.PENDING)
                 .build();
-        //setam categoria
+
+        // Setam categoria (LOGICA TA INITIALA)
         try
         {
             event.setCategory(EventCategory.valueOf(request.getCategory().toUpperCase()));
@@ -66,8 +76,127 @@ public class EventServiceImpl implements EventService
             event.setCategory(EventCategory.OTHER);
         }
 
-        //salvam
-        return eventRepository.save(event);
+        // 3. SALVAM EVENIMENTUL (Ca sa primim un ID valid din baza de date)
+        Event savedEvent = eventRepository.save(event);
+
+        // -----------------------------------------------------------
+        // 4. LOGICA NOUA: PROCESARE SI UPLOAD MATERIALE (OPTIONAL)
+        // -----------------------------------------------------------
+        if (files != null && !files.isEmpty())
+        {
+            for (MultipartFile file : files)
+            {
+                // Ignoram fisierele goale (uneori form-urile trimit input-uri goale)
+                if (!file.isEmpty())
+                {
+                    try
+                    {
+                        // A. Urcam fisierul pe Cloudinary folosind serviciul creat anterior
+                        String uploadedUrl = cloudinaryService.uploadFile(file);
+
+                        // B. Cream entitatea Material
+                        Material material = Material.builder()
+                                .event(savedEvent) // Aici facem legatura cu evenimentul tocmai creat
+                                .fileName(file.getOriginalFilename())
+                                .fileType(file.getContentType()) // ex: application/pdf
+                                .fileUrl(uploadedUrl)
+                                .build();
+
+                        // C. Salvam materialul in baza de date
+                        materialRepository.save(material);
+
+                    }
+                    catch (Exception e)
+                    {
+                        // Optional: Poti arunca eroare ca sa opresti totul, sau doar sa loghezi eroarea
+                        throw new RuntimeException("Eroare la upload material: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        // Returnam evenimentul salvat
+        return savedEvent;
+    }
+
+    @Override
+    @Transactional
+    public void addMaterials(Long eventId, Long organizerId, List<MultipartFile> files)
+    {
+        // 1. Verificam existenta evenimentului
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Error: Event not found."));
+
+        // 2. SECURITATE: Verificam daca userul este proprietarul evenimentului
+        if (!event.getOrganizer().getId().equals(organizerId))
+        {
+            throw new RuntimeException("Error: You can only add materials to your own events!");
+        }
+
+        // 3. Procesam fisierele (exact ca la creare)
+        if (files != null && !files.isEmpty())
+        {
+            for (MultipartFile file : files)
+            {
+                if (!file.isEmpty())
+                {
+                    try
+                    {
+                        String uploadedUrl = cloudinaryService.uploadFile(file);
+
+                        Material material = Material.builder()
+                                .event(event)
+                                .fileName(file.getOriginalFilename())
+                                .fileType(file.getContentType())
+                                .fileUrl(uploadedUrl)
+                                .build();
+
+                        materialRepository.save(material);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RuntimeException("Error uploading material: " + e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteMaterial(Long materialId, Long organizerId)
+    {
+        // 1. Gasim materialul
+        Material material = materialRepository.findById(materialId)
+                .orElseThrow(() -> new RuntimeException("Error: Material not found."));
+
+        // 2. SECURITATE: Verificam daca userul detine evenimentul parinte
+        if (!material.getEvent().getOrganizer().getId().equals(organizerId))
+        {
+            throw new RuntimeException("Error: You can only delete materials from your own events!");
+        }
+
+        // 3. Ștergem fișierul de pe Cloudinary
+        try {
+            cloudinaryService.deleteFile(material.getFileUrl());
+        } catch (Exception e) {
+            System.err.println("Cloudinary delete failed: " + e.getMessage());
+        }
+
+        // 4. IMPORTANT: Ștergem materialul din lista evenimentului pentru a actualiza contextul Hibernate
+        Event event = material.getEvent();
+        if (event != null && event.getMaterials() != null) {
+            event.getMaterials().remove(material);
+        }
+
+        // Nota: Fisierul de pe Cloudinary ramane (pentru stergere de pe Cloudinary ar trebui alta logica, dar e ok si asa pt moment)
+        materialRepository.delete(material);
+    }
+
+    @Override
+    public Material getMaterialById(Long materialId) {
+        return materialRepository.findById(materialId)
+                .orElseThrow(() -> new RuntimeException("Material not found"));
     }
 
     @Override
