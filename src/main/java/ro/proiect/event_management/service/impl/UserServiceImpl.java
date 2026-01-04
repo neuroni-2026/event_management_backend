@@ -3,7 +3,9 @@ package ro.proiect.event_management.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import ro.proiect.event_management.dto.request.ChangePasswordRequest;
 import ro.proiect.event_management.dto.request.SignupRequest;
+import ro.proiect.event_management.dto.request.UpdateProfileRequest;
 import ro.proiect.event_management.entity.Faculty;
 import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.entity.UserRole;
@@ -72,5 +74,62 @@ public class UserServiceImpl implements UserService
         // 4. Salvam in baza de date
         userRepository.save(user);
 
+    }
+
+    @Override
+    public User updateProfile(Long userId, UpdateProfileRequest request)
+    {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null && !request.getLastName().isEmpty()) {
+            user.setLastName(request.getLastName());
+        }
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+
+        // Update role specific fields if provided
+        if (user.getRole() == UserRole.ORGANIZER && request.getOrganizationName() != null) {
+            user.setOrganizationName(request.getOrganizationName());
+        }
+
+        if (user.getRole() == UserRole.STUDENT) {
+            if (request.getFaculty() != null) {
+                try {
+                    user.setStudentFaculty(Faculty.valueOf(request.getFaculty()));
+                } catch (IllegalArgumentException e) {
+                    // Ignore invalid faculty
+                }
+            }
+            if (request.getYearOfStudy() != null) {
+                user.setStudentYear(request.getYearOfStudy());
+            }
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void changePassword(Long userId, ChangePasswordRequest request)
+    {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!encoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Parola curentă este incorectă!");
+        }
+
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    @Override
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
