@@ -43,10 +43,30 @@ public class UserController
                     .studentFaculty(facultyStr)
                     .studentYear(user.getStudentYear())
                     .organizationName(user.getOrganizationName())
+                    .pendingUpgradeRequest(user.getPendingUpgradeRequest())
+                    .pendingOrganizationName(user.getPendingOrganizationName())
+                    .pendingReason(user.getPendingReason())
                     .build();
     
             return ResponseEntity.ok(response);
         }
+
+    @PostMapping("/request-organizer")
+    @Operation(summary = "Solicită upgrade la rolul de ORGANIZER")
+    public ResponseEntity<?> requestOrganizer(@RequestBody java.util.Map<String, String> payload)
+    {
+        String orgName = payload.get("organizationName");
+        String reason = payload.get("reason");
+        
+        if (orgName == null || orgName.isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Organization name is required"));
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.requestOrganizerUpgrade(userDetails.getId(), orgName, reason);
+
+        return ResponseEntity.ok(new MessageResponse("Request sent successfully!"));
+    }
     
         @PutMapping("/profile")
     @Operation(summary = "Actualizează informațiile de profil")

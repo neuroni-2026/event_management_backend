@@ -33,4 +33,5 @@ public interface EventService
 
     ro.proiect.event_management.entity.Material getMaterialById(Long materialId);
 
+    ro.proiect.event_management.dto.response.AdminReportDto getAdminReport();
 }

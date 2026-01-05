@@ -25,4 +25,9 @@ public class UserProfileResponse
     
     // Organizer fields
     private String organizationName;
+    
+    // Request status
+    private Boolean pendingUpgradeRequest;
+    private String pendingOrganizationName;
+    private String pendingReason;
 }

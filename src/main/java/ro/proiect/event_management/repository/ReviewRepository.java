@@ -14,4 +14,7 @@ public interface ReviewRepository extends JpaRepository <Review, Long>
 
     //verificam daca userul a mai scris deja o recenzie pentru evenimentul dat
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT r FROM Review r JOIN FETCH r.user JOIN FETCH r.event")
+    java.util.List<Review> findAllWithDetails();
 }

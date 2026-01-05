@@ -267,7 +267,6 @@ public class EventServiceImpl implements EventService
     }
 
     @Override
-    @Transactional // Important pentru ca facem mai multe operatii DB
     public void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData)
     {
 
@@ -306,6 +305,39 @@ public class EventServiceImpl implements EventService
         if (locationChanged || timeChanged) {
             notifyParticipants(event, locationChanged, timeChanged);
         }
+    }
+
+    @Override
+    public ro.proiect.event_management.dto.response.AdminReportDto getAdminReport()
+    {
+        List<Event> allEvents = eventRepository.findAll();
+        long totalTickets = ticketRepository.count();
+        long totalUsers = userRepository.count();
+        
+        long publishedCount = allEvents.stream().filter(e -> e.getStatus() == EventStatus.PUBLISHED).count();
+        long pendingCount = allEvents.stream().filter(e -> e.getStatus() == EventStatus.PENDING).count();
+        
+        double avgParticipation = publishedCount > 0 ? (double) totalTickets / publishedCount : 0;
+
+        java.util.Map<String, Long> byCategory = allEvents.stream()
+                .collect(java.util.stream.Collectors.groupingBy(e -> e.getCategory().name(), java.util.stream.Collectors.counting()));
+
+        java.util.Map<String, Long> byMonth = allEvents.stream()
+                .collect(java.util.stream.Collectors.groupingBy(e -> {
+                    java.time.LocalDateTime dt = e.getStartTime();
+                    return dt.getMonth().name() + " " + dt.getYear();
+                }, java.util.stream.Collectors.counting()));
+
+        return ro.proiect.event_management.dto.response.AdminReportDto.builder()
+                .totalEvents(allEvents.size())
+                .publishedEvents(publishedCount)
+                .pendingEvents(pendingCount)
+                .totalTicketsSold(totalTickets)
+                .totalUsers(totalUsers)
+                .averageParticipation(avgParticipation)
+                .eventsByCategory(byCategory)
+                .eventsByMonth(byMonth)
+                .build();
     }
 
     private void notifyParticipants(Event event, boolean locChanged, boolean timeChanged)

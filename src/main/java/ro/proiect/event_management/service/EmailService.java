@@ -30,6 +30,35 @@ public class EmailService
     private String secretKey="96542abbe388cfb873ee58dce15615dd";
 
     @Async
+    public void sendSimpleEmail(String toEmail, String subject, String textContent) {
+        try {
+            ClientOptions options = ClientOptions.builder()
+                    .apiKey(apiKey)
+                    .apiSecretKey(secretKey)
+                    .build();
+
+            MailjetClient client = new MailjetClient(options);
+
+            MailjetRequest request = new MailjetRequest(Emailv31.resource)
+                    .property(Emailv31.MESSAGES, new JSONArray()
+                            .put(new JSONObject()
+                                    .put(Emailv31.Message.FROM, new JSONObject()
+                                            .put("Email", "bogdan.rusu1@student.usv.ro")
+                                            .put("Name", "Event Management"))
+                                    .put(Emailv31.Message.TO, new JSONArray()
+                                            .put(new JSONObject()
+                                                    .put("Email", toEmail)))
+                                    .put(Emailv31.Message.SUBJECT, subject)
+                                    .put(Emailv31.Message.TEXTPART, textContent)
+                            ));
+
+            client.post(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Async
     public void sendTicketEmail(String toEmail, String userName, String eventTitle, String eventLocation, String eventDate, String ticketCode)
     {
         try

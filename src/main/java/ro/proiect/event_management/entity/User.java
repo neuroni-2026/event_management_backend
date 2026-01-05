@@ -56,6 +56,25 @@ public class User
     @Column(name = "organization_name")
     private String organizationName;
 
+    // --- Cerere Upgrade la Organizator ---
+    @Column(name = "pending_upgrade_request")
+    @Builder.Default
+    private Boolean pendingUpgradeRequest = false;
+
+    @Column(name = "pending_organization_name")
+    private String pendingOrganizationName;
+
+    @Column(name = "pending_reason", columnDefinition = "TEXT")
+    private String pendingReason;
+
+    // --- Moderare ---
+    @Column(name = "is_enabled")
+    @Builder.Default
+    private Boolean isEnabled = true;
+
+    @Column(name = "suspended_until")
+    private LocalDateTime suspendedUntil;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
