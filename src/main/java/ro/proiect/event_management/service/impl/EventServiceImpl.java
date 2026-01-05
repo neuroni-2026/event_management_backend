@@ -199,10 +199,36 @@ public class EventServiceImpl implements EventService
                 .orElseThrow(() -> new RuntimeException("Material not found"));
     }
 
+    @Autowired
+    private ReviewRepository reviewRepository;
+
     @Override
-    public List<Event> getMyEvents(Long organizerId)
+    public List<ro.proiect.event_management.dto.response.OrganizerEventDto> getMyEvents(Long organizerId)
     {
-        return eventRepository.findByOrganizerId(organizerId);
+        List<Event> events = eventRepository.findByOrganizerId(organizerId);
+        
+        return events.stream().map(e -> {
+            long pCount = ticketRepository.countByEventId(e.getId());
+            List<Review> reviews = reviewRepository.findByEventId(e.getId());
+            double avgRating = reviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+
+            return ro.proiect.event_management.dto.response.OrganizerEventDto.builder()
+                    .id(e.getId())
+                    .title(e.getTitle())
+                    .location(e.getLocation())
+                    .startTime(e.getStartTime())
+                    .imageUrl(e.getImageUrl())
+                    .category(e.getCategory().name())
+                    .status(e.getStatus())
+                    .maxCapacity(e.getMaxCapacity())
+                    .participantCount(pCount)
+                    .averageRating(avgRating)
+                    .reviewCount(reviews.size())
+                    .build();
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @Override

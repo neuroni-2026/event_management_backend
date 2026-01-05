@@ -54,6 +54,9 @@ public class Event
     @Column(name = "max_capacity")
     private Integer maxCapacity;
 
+    @org.hibernate.annotations.Formula("(SELECT COUNT(*) FROM tickets t WHERE t.event_id = id)")
+    private Long participantCount;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Schema(description = "Statusul evenimentului", example = "PUBLISHED")

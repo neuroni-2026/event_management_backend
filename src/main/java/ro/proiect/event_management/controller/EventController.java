@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
 import ro.proiect.event_management.dto.response.MessageResponse;
 import ro.proiect.event_management.entity.Event;
+import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.repository.EventRepository;
 import ro.proiect.event_management.security.services.UserDetailsImpl;
 import ro.proiect.event_management.service.EventService;
@@ -36,6 +37,15 @@ public class EventController
 
     @Autowired
     private EventRepository eventRepository;
+
+    @Autowired
+    private ro.proiect.event_management.repository.TicketRepository ticketRepository;
+
+    @Autowired
+    private ro.proiect.event_management.repository.ReviewRepository reviewRepository;
+
+    @Autowired
+    private ro.proiect.event_management.service.NotificationService notificationService;
 
     @GetMapping("/{id}")
     @Operation(summary = "Obține detalii despre un eveniment")
@@ -102,8 +112,8 @@ public class EventController
     @GetMapping("/my-events")
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Obține evenimentele organizatorului curent")
-    @ApiResponse(responseCode = "200", description = "Lista evenimentelor create de organizator")
-    public List<Event> getMyEvents()
+    @ApiResponse(responseCode = "200", description = "Lista evenimentelor create de organizator cu statistici")
+    public List<ro.proiect.event_management.dto.response.OrganizerEventDto> getMyEvents()
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return eventService.getMyEvents(userDetails.getId());
@@ -151,5 +161,55 @@ public class EventController
         {
             return ResponseEntity.status(403).body(new MessageResponse(e.getMessage()));
         }
+    }
+
+    // --- MANAGEMENT PARTICIPANTI & FEEDBACK ---
+
+    @GetMapping("/{eventId}/participants")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Obține lista participanților la un eveniment propriu")
+    public ResponseEntity<?> getParticipants(@PathVariable Long eventId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+        
+        if (!event.getOrganizer().getId().equals(userDetails.getId())) {
+            return ResponseEntity.status(403).body(new MessageResponse("Nu poți vizualiza participanții altui organizator!"));
+        }
+
+        List<User> participants = ticketRepository.findUsersByEventId(eventId);
+        return ResponseEntity.ok(participants);
+    }
+
+    @PostMapping("/{eventId}/notify")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Trimite o notificare personalizată tuturor participanților la un eveniment")
+    public ResponseEntity<?> notifyParticipants(@PathVariable Long eventId, @RequestBody java.util.Map<String, String> payload) {
+        String message = payload.get("message");
+        if (message == null || message.isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Mesajul nu poate fi gol!"));
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userDetails.getId())) {
+            return ResponseEntity.status(403).body(new MessageResponse("Nu poți trimite notificări participanților altui organizator!"));
+        }
+
+        List<User> participants = ticketRepository.findUsersByEventId(eventId);
+        String finalMessage = "[" + event.getTitle() + "] " + message;
+        
+        for (User user : participants) {
+            ro.proiect.event_management.entity.Notification notification = ro.proiect.event_management.entity.Notification.builder()
+                    .user(user)
+                    .event(event)
+                    .message(finalMessage)
+                    .type(ro.proiect.event_management.entity.NotificationType.INFO)
+                    .isRead(false)
+                    .build();
+            notificationService.createNotification(notification);
+        }
+
+        return ResponseEntity.ok(new MessageResponse("Notificare trimisă către " + participants.size() + " participanți."));
     }
 }

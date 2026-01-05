@@ -34,4 +34,8 @@ public class Favorite
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "reminder_sent")
+    @Builder.Default
+    private Boolean reminderSent = false;
 }

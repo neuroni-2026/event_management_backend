@@ -13,15 +13,13 @@ public interface EventService
 
     // ORGANIZER
     //metoda pentru organizatorii de creare a evenimentelor
-    Event createEvent(CreateEventRequest request, Long organizerId, List<MultipartFile> files);
+    ro.proiect.event_management.entity.Event createEvent(CreateEventRequest request, Long organizerId, List<MultipartFile> files);
 
     void deleteEvent(Long eventId, Long organizerId);
 
     void updateEvent(Long eventId, Long organizerId, CreateEventRequest newData);
 
-    // ADMIN
-    //metoda pentru admini de a vedea tot ce s-a creat
-    List<Event> getMyEvents(Long organizerId);
+    List<ro.proiect.event_management.dto.response.OrganizerEventDto> getMyEvents(Long organizerId);
 
     void approveEvent(Long eventId);
 

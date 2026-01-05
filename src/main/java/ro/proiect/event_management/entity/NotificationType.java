@@ -8,6 +8,7 @@ public enum NotificationType
     DATE_CHANGED,
     CANCELLED,
     INFO,
+    REMINDER,
     OTHER,
     //pt organizatori
     EVENT_APPROVED,

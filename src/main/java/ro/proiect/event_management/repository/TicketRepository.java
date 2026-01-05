@@ -19,6 +19,8 @@ public interface TicketRepository extends JpaRepository <Ticket, Long>
     // 2. Pentru Organizator: Lista de participanti la un event
     List<Ticket> findByEventId(Long eventId);
 
+    long countByEventId(Long eventId);
+
     // 3. VALIDARE: Gaseste biletul dupa codul QR unic
     Optional<Ticket> findByQrCode(String qrCode);
 

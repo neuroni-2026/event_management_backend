@@ -126,26 +126,54 @@ public class EmailService
     private String buildHtmlEmail(String name, String title, String location, String date, String code)
     {
         return "" +
-                "<div style=\"font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;\">" +
-                "  <div style=\"background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">" +
-                "    <div style=\"background-color: #4CAF50; padding: 20px; text-align: center;\">" +
-                "      <h1 style=\"color: white; margin: 0; font-size: 24px;\">Confirmare Bilet</h1>" +
+                "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 40px 20px;\">" +
+                "  <div style=\"background-color: #ffffff; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;\">" +
+                "    <!-- Branding Header -->" +
+                "    <div style=\"background-color: #ffffff; padding: 25px; text-align: center; border-bottom: 1px solid #f1f5f9;\">" +
+                "      <h2 style=\"color: #1e293b; margin: 0; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; font-style: italic; font-size: 20px;\">EventManager</h2>" +
                 "    </div>" +
-                "    <div style=\"padding: 30px;\">" +
-                "      <p>Salut <strong>" + name + "</strong>,</p>" +
-                "      <p>Te așteptăm cu drag! Iată detaliile:</p>" +
-                "      <div style=\"background-color: #f9f9f9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;\">" +
-                "        <h3 style=\"margin-top: 0;\">" + title + "</h3>" +
-                "        <p>📍 " + location + "</p>" +
-                "        <p>📅 " + date + "</p>" +
-                "        <p>🔢 Cod: " + code + "</p>" +
+                "    " +
+                "    <!-- Hero Section (Event Title) -->" +
+                "    <div style=\"background-color: #2563eb; padding: 45px 35px; text-align: center;\">" +
+                "      <span style=\"display: inline-block; background-color: rgba(255,255,255,0.2); color: white; padding: 5px 15px; border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px;\">Bilet Confirmat</span>" +
+                "      <h1 style=\"color: white; margin: 0; font-size: 32px; line-height: 1.2; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1);\">" + title + "</h1>" +
+                "    </div>" +
+                "" +
+                "    <!-- Body Content -->" +
+                "    <div style=\"padding: 40px 35px;\">" +
+                "      <p style=\"color: #64748b; font-size: 16px; margin-bottom: 30px; text-align: center;\">Salut <strong>" + name + "</strong>, locul tău a fost rezervat cu succes!</p>" +
+                "      " +
+                "      <div style=\"background-color: #f8fafc; border-radius: 24px; padding: 30px; margin-bottom: 35px; border: 1px solid #f1f5f9;\">" +
+                "        <table style=\"width: 100%; border-collapse: collapse;\">" +
+                "          <tr>" +
+                "            <td style=\"padding-bottom: 25px;\">" +
+                "              <p style=\"color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px 0;\">📍 UNDE</p>" +
+                "              <p style=\"color: #1e293b; font-size: 16px; font-weight: 700; margin: 0;\">" + location + "</p>" +
+                "            </td>" +
+                "          </tr>" +
+                "          <tr>" +
+                "            <td>" +
+                "              <p style=\"color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px 0;\">📅 CÂND</p>" +
+                "              <p style=\"color: #1e293b; font-size: 16px; font-weight: 700; margin: 0;\">" + date + "</p>" +
+                "            </td>" +
+                "          </tr>" +
+                "        </table>" +
                 "      </div>" +
-                "      <div style=\"text-align: center; margin-top: 30px;\">" +
-                "        <p style=\"color: #888; font-size: 14px;\">Prezintă acest cod QR la intrare:</p>" +
-                "        <img src=\"cid:qr_code\" alt=\"QR Code\" width=\"200\" height=\"200\" style=\"border: 1px solid #ddd; padding: 5px; border-radius: 4px;\"/>" +
+                "" +
+                "      <!-- Access Section -->" +
+                "      <div style=\"text-align: center; padding: 30px; background-color: #ffffff; border: 2px dashed #e2e8f0; border-radius: 28px;\">" +
+                "        <p style=\"color: #1e293b; font-size: 12px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;\">COD ACCES: " + code + "</p>" +
+                "        <img src=\"cid:qr_code\" alt=\"QR Code\" width=\"200\" height=\"200\" style=\"display: block; margin: 0 auto; border-radius: 12px;\"/>" +
+                "        <p style=\"color: #94a3b8; font-size: 12px; margin-top: 20px; font-weight: 500;\">Prezintă acest cod la intrare pentru scanare.</p>" +
                 "      </div>" +
+                "    </div>" +
+                "" +
+                "    <!-- Professional Footer -->" +
+                "    <div style=\"background-color: #f8fafc; padding: 25px; text-align: center; border-top: 1px solid #f1f5f9;\">" +
+                "      <p style=\"color: #94a3b8; font-size: 11px; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;\">© 2026 EventManager Platform</p>" +
                 "    </div>" +
                 "  </div>" +
+                "  <p style=\"text-align: center; color: #cbd5e1; font-size: 10px; margin-top: 20px;\">Acesta este un email automat. Te rugăm să nu răspunzi.</p>" +
                 "</div>";
     }
 }

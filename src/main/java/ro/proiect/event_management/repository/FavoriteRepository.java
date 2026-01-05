@@ -17,4 +17,7 @@ public interface FavoriteRepository extends JpaRepository <Favorite, Long>
 
     // Ne ajuta sa gasim exact randul din tabel ca sa il stergem
     Optional<Favorite> findByUserIdAndEventId(Long userId, Long eventId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT f FROM Favorite f JOIN FETCH f.event e WHERE f.reminderSent = false AND e.startTime <= :time")
+    List<Favorite> findFavoritesNeedingReminder(java.time.LocalDateTime time);
 }

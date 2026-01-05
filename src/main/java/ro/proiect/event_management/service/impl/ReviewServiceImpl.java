@@ -74,6 +74,7 @@ public class ReviewServiceImpl implements ReviewService
             // Construim raspunsul final folosind builder
             return ReviewResponse.builder()
                     .id(review.getId())
+                    .userName(user.getFirstName() + " " + user.getLastName())
                     .rating(review.getRating())
                     .comment(review.getComment())
                     .createdAt(review.getCreatedAt()) // Asigura-te ca ai getCreatedAt() in entitatea Review
