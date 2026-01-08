@@ -6,11 +6,15 @@ import org.springframework.stereotype.Service;
 import ro.proiect.event_management.dto.request.ChangePasswordRequest;
 import ro.proiect.event_management.dto.request.SignupRequest;
 import ro.proiect.event_management.dto.request.UpdateProfileRequest;
-import ro.proiect.event_management.entity.Faculty;
-import ro.proiect.event_management.entity.User;
-import ro.proiect.event_management.entity.UserRole;
+import ro.proiect.event_management.dto.response.OrganizerStatsDto;
+import ro.proiect.event_management.entity.*;
 import ro.proiect.event_management.repository.UserRepository;
+import ro.proiect.event_management.service.EmailService;
+import ro.proiect.event_management.service.NotificationService;
 import ro.proiect.event_management.service.UserService;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService
@@ -22,10 +26,10 @@ public class UserServiceImpl implements UserService
     PasswordEncoder encoder;
 
     @Autowired
-    ro.proiect.event_management.service.EmailService emailService;
+    EmailService emailService;
 
     @Autowired
-    ro.proiect.event_management.service.NotificationService notificationService;
+    NotificationService notificationService;
 
 
     @Override
@@ -140,20 +144,20 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public java.util.List<User> getOrganizerRequests()
+    public List<User> getOrganizerRequests()
     {
         return userRepository.findPendingOrganizerRequests();
     }
 
     @Override
-    public java.util.List<ro.proiect.event_management.dto.response.OrganizerStatsDto> getOrganizerStats() {
+    public List<OrganizerStatsDto> getOrganizerStats() {
         return userRepository.getOrganizerStats();
     }
 
     @Override
     public void suspendUser(Long userId, Integer days) {
         User user = getUserById(userId);
-        user.setSuspendedUntil(java.time.LocalDateTime.now().plusDays(days));
+        user.setSuspendedUntil(LocalDateTime.now().plusDays(days));
         userRepository.save(user);
         emailService.sendSimpleEmail(user.getEmail(), "Cont Suspendat", "Contul tău a fost suspendat pentru " + days + " zile.");
     }
@@ -193,7 +197,7 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public java.util.List<User> getAllUsers() {
+    public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
@@ -213,9 +217,9 @@ public class UserServiceImpl implements UserService
         emailService.sendSimpleEmail(user.getEmail(), "Cerere Aprobată", "Felicitări! Cererea ta de organizator a fost aprobată.");
 
         // Notificare in-app
-        ro.proiect.event_management.entity.Notification notification = ro.proiect.event_management.entity.Notification.builder()
+        Notification notification = Notification.builder()
                 .user(user)
-                .type(ro.proiect.event_management.entity.NotificationType.INFO)
+                .type(NotificationType.INFO)
                 .message("Felicitări! Cererea ta de organizator a fost aprobată. Acum poți crea evenimente.")
                 .isRead(false)
                 .build();
@@ -236,9 +240,9 @@ public class UserServiceImpl implements UserService
         emailService.sendSimpleEmail(user.getEmail(), "Cerere Respinsă", "Cererea ta a fost respinsă. Motiv: " + reason);
 
         // Notificare in-app
-        ro.proiect.event_management.entity.Notification notification = ro.proiect.event_management.entity.Notification.builder()
+        Notification notification = Notification.builder()
                 .user(user)
-                .type(ro.proiect.event_management.entity.NotificationType.INFO)
+                .type(NotificationType.INFO)
                 .message("Cererea ta de organizator a fost respinsă. Motiv: " + reason)
                 .isRead(false)
                 .build();

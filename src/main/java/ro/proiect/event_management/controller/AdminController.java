@@ -8,13 +8,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import ro.proiect.event_management.dto.response.AdminReportDto;
 import ro.proiect.event_management.dto.response.MessageResponse;
+import ro.proiect.event_management.dto.response.OrganizerStatsDto;
+import ro.proiect.event_management.dto.response.UserProfileResponse;
 import ro.proiect.event_management.entity.Event;
 import ro.proiect.event_management.entity.EventStatus;
+import ro.proiect.event_management.entity.Review;
+import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.repository.EventRepository;
+import ro.proiect.event_management.repository.ReviewRepository;
 import ro.proiect.event_management.service.EventService;
+import ro.proiect.event_management.service.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -31,10 +39,10 @@ public class AdminController
     private EventRepository eventRepository;
 
     @Autowired
-    private ro.proiect.event_management.repository.ReviewRepository reviewRepository;
+    private ReviewRepository reviewRepository;
 
     @Autowired
-    private ro.proiect.event_management.service.UserService userService;
+    private UserService userService;
 
     // 1. APROBA EVENIMENT
     @PutMapping("/approve/{eventId}")
@@ -91,12 +99,12 @@ public class AdminController
     @GetMapping("/organizer-requests")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Obține cererile de upgrade la organizator")
-    public ResponseEntity<java.util.List<ro.proiect.event_management.dto.response.UserProfileResponse>> getOrganizerRequests()
+    public ResponseEntity<List<UserProfileResponse>> getOrganizerRequests()
     {
-        java.util.List<ro.proiect.event_management.entity.User> users = userService.getOrganizerRequests();
+        List<User> users = userService.getOrganizerRequests();
         
-        java.util.List<ro.proiect.event_management.dto.response.UserProfileResponse> response = users.stream()
-            .map(u -> ro.proiect.event_management.dto.response.UserProfileResponse.builder()
+        List<UserProfileResponse> response = users.stream()
+            .map(u -> UserProfileResponse.builder()
                     .id(u.getId())
                     .email(u.getEmail())
                     .firstName(u.getFirstName())
@@ -110,7 +118,7 @@ public class AdminController
                     .pendingOrganizationName(u.getPendingOrganizationName())
                     .pendingReason(u.getPendingReason())
                     .build())
-            .collect(java.util.stream.Collectors.toList());
+            .collect(Collectors.toList());
             
         return ResponseEntity.ok(response);
     }
@@ -139,7 +147,7 @@ public class AdminController
     @GetMapping("/organizers/stats")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Obține statistici despre toți organizatorii")
-    public ResponseEntity<java.util.List<ro.proiect.event_management.dto.response.OrganizerStatsDto>> getOrganizerStats()
+    public ResponseEntity<List<OrganizerStatsDto>> getOrganizerStats()
     {
         return ResponseEntity.ok(userService.getOrganizerStats());
     }
@@ -183,7 +191,7 @@ public class AdminController
     @GetMapping("/reports")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Obține rapoarte administrative și statistici")
-    public ResponseEntity<ro.proiect.event_management.dto.response.AdminReportDto> getReports()
+    public ResponseEntity<AdminReportDto> getReports()
     {
         return ResponseEntity.ok(eventService.getAdminReport());
     }
@@ -191,7 +199,7 @@ public class AdminController
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Obține lista tuturor utilizatorilor (Admin)")
-    public ResponseEntity<java.util.List<ro.proiect.event_management.entity.User>> getAllUsers()
+    public ResponseEntity<List<User>> getAllUsers()
     {
         return ResponseEntity.ok(userService.getAllUsers());
     }
@@ -210,7 +218,7 @@ public class AdminController
     @GetMapping("/reviews")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Obține toate recenziile de pe platformă")
-    public ResponseEntity<java.util.List<ro.proiect.event_management.entity.Review>> getAllReviews()
+    public ResponseEntity<List<Review>> getAllReviews()
     {
         return ResponseEntity.ok(reviewRepository.findAllWithDetails());
     }

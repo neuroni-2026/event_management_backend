@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import ro.proiect.event_management.dto.response.OrganizerStatsDto;
 import ro.proiect.event_management.entity.User;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,7 +21,7 @@ public interface UserRepository extends JpaRepository <User, Long>
 
     // Gaseste cererile de organizator
     @Query("SELECT u FROM User u WHERE u.pendingUpgradeRequest = true")
-    java.util.List<User> findPendingOrganizerRequests();
+    List<User> findPendingOrganizerRequests();
 
     // Statistici Organizatori
     @Query("SELECT new ro.proiect.event_management.dto.response.OrganizerStatsDto(" +
@@ -34,5 +35,5 @@ public interface UserRepository extends JpaRepository <User, Long>
            "LEFT JOIN Review r ON r.event.id = e.id " +
            "WHERE u.role = ro.proiect.event_management.entity.UserRole.ORGANIZER " +
            "GROUP BY u.id, u.firstName, u.lastName, u.email, u.organizationName, u.isEnabled, u.suspendedUntil")
-    java.util.List<OrganizerStatsDto> getOrganizerStats();
+    List<OrganizerStatsDto> getOrganizerStats();
 }

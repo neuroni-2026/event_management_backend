@@ -18,13 +18,20 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
 import ro.proiect.event_management.dto.response.MessageResponse;
+import ro.proiect.event_management.dto.response.OrganizerEventDto;
 import ro.proiect.event_management.entity.Event;
+import ro.proiect.event_management.entity.Notification;
+import ro.proiect.event_management.entity.NotificationType;
 import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.repository.EventRepository;
+import ro.proiect.event_management.repository.ReviewRepository;
+import ro.proiect.event_management.repository.TicketRepository;
 import ro.proiect.event_management.security.services.UserDetailsImpl;
 import ro.proiect.event_management.service.EventService;
+import ro.proiect.event_management.service.NotificationService;
 
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -39,13 +46,13 @@ public class EventController
     private EventRepository eventRepository;
 
     @Autowired
-    private ro.proiect.event_management.repository.TicketRepository ticketRepository;
+    private TicketRepository ticketRepository;
 
     @Autowired
-    private ro.proiect.event_management.repository.ReviewRepository reviewRepository;
+    private ReviewRepository reviewRepository;
 
     @Autowired
-    private ro.proiect.event_management.service.NotificationService notificationService;
+    private NotificationService notificationService;
 
     @GetMapping("/{id}")
     @Operation(summary = "Obține detalii despre un eveniment")
@@ -113,7 +120,7 @@ public class EventController
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Obține evenimentele organizatorului curent")
     @ApiResponse(responseCode = "200", description = "Lista evenimentelor create de organizator cu statistici")
-    public List<ro.proiect.event_management.dto.response.OrganizerEventDto> getMyEvents()
+    public List<OrganizerEventDto> getMyEvents()
     {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return eventService.getMyEvents(userDetails.getId());
@@ -183,7 +190,7 @@ public class EventController
     @PostMapping("/{eventId}/notify")
     @PreAuthorize("hasRole('ORGANIZER')")
     @Operation(summary = "Trimite o notificare personalizată tuturor participanților la un eveniment")
-    public ResponseEntity<?> notifyParticipants(@PathVariable Long eventId, @RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<?> notifyParticipants(@PathVariable Long eventId, @RequestBody Map<String, String> payload) {
         String message = payload.get("message");
         if (message == null || message.isBlank()) {
             return ResponseEntity.badRequest().body(new MessageResponse("Mesajul nu poate fi gol!"));
@@ -200,11 +207,11 @@ public class EventController
         String finalMessage = "[" + event.getTitle() + "] " + message;
         
         for (User user : participants) {
-            ro.proiect.event_management.entity.Notification notification = ro.proiect.event_management.entity.Notification.builder()
+            Notification notification = Notification.builder()
                     .user(user)
                     .event(event)
                     .message(finalMessage)
-                    .type(ro.proiect.event_management.entity.NotificationType.INFO)
+                    .type(NotificationType.INFO)
                     .isRead(false)
                     .build();
             notificationService.createNotification(notification);

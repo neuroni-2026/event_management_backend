@@ -5,13 +5,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
+import ro.proiect.event_management.dto.response.AdminReportDto;
+import ro.proiect.event_management.dto.response.OrganizerEventDto;
 import ro.proiect.event_management.entity.*;
 import ro.proiect.event_management.repository.*;
 import ro.proiect.event_management.service.CloudinaryService;
 import ro.proiect.event_management.service.EventService;
 import ro.proiect.event_management.service.NotificationService;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService
@@ -203,7 +208,7 @@ public class EventServiceImpl implements EventService
     private ReviewRepository reviewRepository;
 
     @Override
-    public List<ro.proiect.event_management.dto.response.OrganizerEventDto> getMyEvents(Long organizerId)
+    public List<OrganizerEventDto> getMyEvents(Long organizerId)
     {
         List<Event> events = eventRepository.findByOrganizerId(organizerId);
         
@@ -215,7 +220,7 @@ public class EventServiceImpl implements EventService
                     .average()
                     .orElse(0.0);
 
-            return ro.proiect.event_management.dto.response.OrganizerEventDto.builder()
+            return OrganizerEventDto.builder()
                     .id(e.getId())
                     .title(e.getTitle())
                     .location(e.getLocation())
@@ -228,7 +233,7 @@ public class EventServiceImpl implements EventService
                     .averageRating(avgRating)
                     .reviewCount(reviews.size())
                     .build();
-        }).collect(java.util.stream.Collectors.toList());
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -334,7 +339,7 @@ public class EventServiceImpl implements EventService
     }
 
     @Override
-    public ro.proiect.event_management.dto.response.AdminReportDto getAdminReport()
+    public AdminReportDto getAdminReport()
     {
         List<Event> allEvents = eventRepository.findAll();
         long totalTickets = ticketRepository.count();
@@ -345,16 +350,16 @@ public class EventServiceImpl implements EventService
         
         double avgParticipation = publishedCount > 0 ? (double) totalTickets / publishedCount : 0;
 
-        java.util.Map<String, Long> byCategory = allEvents.stream()
-                .collect(java.util.stream.Collectors.groupingBy(e -> e.getCategory().name(), java.util.stream.Collectors.counting()));
+        Map<String, Long> byCategory = allEvents.stream()
+                .collect(Collectors.groupingBy(e -> e.getCategory().name(), Collectors.counting()));
 
-        java.util.Map<String, Long> byMonth = allEvents.stream()
-                .collect(java.util.stream.Collectors.groupingBy(e -> {
-                    java.time.LocalDateTime dt = e.getStartTime();
+        Map<String, Long> byMonth = allEvents.stream()
+                .collect(Collectors.groupingBy(e -> {
+                    LocalDateTime dt = e.getStartTime();
                     return dt.getMonth().name() + " " + dt.getYear();
-                }, java.util.stream.Collectors.counting()));
+                }, Collectors.counting()));
 
-        return ro.proiect.event_management.dto.response.AdminReportDto.builder()
+        return AdminReportDto.builder()
                 .totalEvents(allEvents.size())
                 .publishedEvents(publishedCount)
                 .pendingEvents(pendingCount)

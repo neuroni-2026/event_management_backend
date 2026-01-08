@@ -125,55 +125,94 @@ public class EmailService
 
     private String buildHtmlEmail(String name, String title, String location, String date, String code)
     {
+        // Culori extrase din frontend (Tailwind/CSS variables)
+        String primaryColor = "#ff6b6b";    // hsl(0, 100%, 71%) - Salmon
+        String primaryDark = "#ea580c";     // Orange-600
+        String accentColor = "#8b5cf6";     // hsl(262, 83%, 58%) - Violet
+        String bgColor = "#f9fafb";         // Background deschis
+        String cardBg = "#ffffff";
+        String darkText = "#111827";        // Gray-900
+        String mutedText = "#6b7280";       // Gray-500
+        String lightBorder = "#f3f4f6";     // Gray-100
+        String orangeBg = "#fff7ed";        // Orange-50 (Used as soft background for accent)
+
+        String displayCode = (code != null) ? code.substring(0, Math.min(code.length(), 8)) : "N/A";
+
         return "" +
-                "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 40px 20px;\">" +
-                "  <div style=\"background-color: #ffffff; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;\">" +
-                "    <!-- Branding Header -->" +
-                "    <div style=\"background-color: #ffffff; padding: 25px; text-align: center; border-bottom: 1px solid #f1f5f9;\">" +
-                "      <h2 style=\"color: #1e293b; margin: 0; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; font-style: italic; font-size: 20px;\">EventManager</h2>" +
-                "    </div>" +
+                "<div style=\"font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; background-color: " + bgColor + "; padding: 40px 20px; text-align: center;\">" +
+                "  <div style=\"max-width: 450px; margin: 0 auto; background-color: " + cardBg + "; border-radius: 32px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); border: 1px solid " + lightBorder + ";\">" +
                 "    " +
-                "    <!-- Hero Section (Event Title) -->" +
-                "    <div style=\"background-color: #2563eb; padding: 45px 35px; text-align: center;\">" +
-                "      <span style=\"display: inline-block; background-color: rgba(255,255,255,0.2); color: white; padding: 5px 15px; border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px;\">Bilet Confirmat</span>" +
-                "      <h1 style=\"color: white; margin: 0; font-size: 32px; line-height: 1.2; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1);\">" + title + "</h1>" +
+                "    <!-- Header Gradient Section -->" +
+                "    <div style=\"background: linear-gradient(135deg, " + primaryColor + " 0%, " + primaryDark + " 100%); background-color: " + primaryColor + "; padding: 40px 30px; color: #ffffff;\">" +
+                "      <div style=\"display: inline-block; background-color: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.3); margin-bottom: 20px;\">" +
+                "        <span style=\"font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;\">✓ Bilet Valid</span>" +
+                "      </div>" +
+                "      <h1 style=\"margin: 0; font-size: 28px; font-weight: 900; line-height: 1.2; letter-spacing: -0.5px;\">" + title + "</h1>" +
+                "      <p style=\"margin: 10px 0 0 0; font-size: 14px; opacity: 0.9; font-weight: 500;\">ID Bilet: #" + displayCode + "</p>" +
                 "    </div>" +
                 "" +
-                "    <!-- Body Content -->" +
-                "    <div style=\"padding: 40px 35px;\">" +
-                "      <p style=\"color: #64748b; font-size: 16px; margin-bottom: 30px; text-align: center;\">Salut <strong>" + name + "</strong>, locul tău a fost rezervat cu succes!</p>" +
+                "    <!-- QR Section -->" +
+                "    <div style=\"padding: 40px 30px 20px 30px; background-color: " + cardBg + ";\">" +
+                "      <div style=\"display: inline-block; padding: 12px; background-color: " + cardBg + "; border: 4px solid " + darkText + "; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);\">" +
+                "        <img src=\"cid:qr_code\" alt=\"QR Code\" width=\"180\" height=\"180\" style=\"display: block;\"/>" +
+                "      </div>" +
+                "      <p style=\"margin: 20px 0 30px 0; font-size: 10px; font-weight: 800; color: " + mutedText + "; text-transform: uppercase; letter-spacing: 3px;\">Scanează la intrare</p>" +
                 "      " +
-                "      <div style=\"background-color: #f8fafc; border-radius: 24px; padding: 30px; margin-bottom: 35px; border: 1px solid #f1f5f9;\">" +
-                "        <table style=\"width: 100%; border-collapse: collapse;\">" +
-                "          <tr>" +
-                "            <td style=\"padding-bottom: 25px;\">" +
-                "              <p style=\"color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px 0;\">📍 UNDE</p>" +
-                "              <p style=\"color: #1e293b; font-size: 16px; font-weight: 700; margin: 0;\">" + location + "</p>" +
-                "            </td>" +
-                "          </tr>" +
-                "          <tr>" +
-                "            <td>" +
-                "              <p style=\"color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px 0;\">📅 CÂND</p>" +
-                "              <p style=\"color: #1e293b; font-size: 16px; font-weight: 700; margin: 0;\">" + date + "</p>" +
-                "            </td>" +
-                "          </tr>" +
-                "        </table>" +
-                "      </div>" +
-                "" +
-                "      <!-- Access Section -->" +
-                "      <div style=\"text-align: center; padding: 30px; background-color: #ffffff; border: 2px dashed #e2e8f0; border-radius: 28px;\">" +
-                "        <p style=\"color: #1e293b; font-size: 12px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;\">COD ACCES: " + code + "</p>" +
-                "        <img src=\"cid:qr_code\" alt=\"QR Code\" width=\"200\" height=\"200\" style=\"display: block; margin: 0 auto; border-radius: 12px;\"/>" +
-                "        <p style=\"color: #94a3b8; font-size: 12px; margin-top: 20px; font-weight: 500;\">Prezintă acest cod la intrare pentru scanare.</p>" +
-                "      </div>" +
+                "      <!-- Dotted Line Separator -->" +
+                "      <div style=\"border-top: 2px dashed #e5e7eb; height: 1px; width: 100%; margin-bottom: 30px;\"></div>" +
                 "    </div>" +
                 "" +
-                "    <!-- Professional Footer -->" +
-                "    <div style=\"background-color: #f8fafc; padding: 25px; text-align: center; border-top: 1px solid #f1f5f9;\">" +
-                "      <p style=\"color: #94a3b8; font-size: 11px; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;\">© 2026 EventManager Platform</p>" +
+                "    <!-- Details Section -->" +
+                "    <div style=\"padding: 0 40px 40px 40px; text-align: left;\">" +
+                "      " +
+                "      <!-- Row 1: Date -->" +
+                "      <table style=\"width: 100%; margin-bottom: 25px;\">" +
+                "        <tr>" +
+                "          <td style=\"width: 50px; vertical-align: top;\">" +
+                "            <div style=\"background-color: " + orangeBg + "; color: " + accentColor + "; width: 44px; height: 44px; border-radius: 14px; text-align: center; line-height: 44px; font-size: 20px;\">📅</div>" +
+                "          </td>" +
+                "          <td style=\"padding-left: 15px;\">" +
+                "            <p style=\"margin: 0; font-size: 10px; font-weight: 800; color: " + mutedText + "; text-transform: uppercase; letter-spacing: 1.5px;\">Data și Ora</p>" +
+                "            <p style=\"margin: 2px 0 0 0; font-size: 16px; font-weight: 700; color: " + darkText + ";\">" + date + "</p>" +
+                "          </td>" +
+                "        </tr>" +
+                "      </table>" +
+                "" +
+                "      <!-- Row 2: Location -->" +
+                "      <table style=\"width: 100%; margin-bottom: 25px;\">" +
+                "        <tr>" +
+                "          <td style=\"width: 50px; vertical-align: top;\">" +
+                "            <div style=\"background-color: " + orangeBg + "; color: " + accentColor + "; width: 44px; height: 44px; border-radius: 14px; text-align: center; line-height: 44px; font-size: 20px;\">📍</div>" +
+                "          </td>" +
+                "          <td style=\"padding-left: 15px;\">" +
+                "            <p style=\"margin: 0; font-size: 10px; font-weight: 800; color: " + mutedText + "; text-transform: uppercase; letter-spacing: 1.5px;\">Locație</p>" +
+                "            <p style=\"margin: 2px 0 0 0; font-size: 16px; font-weight: 700; color: " + darkText + ";\">" + location + "</p>" +
+                "          </td>" +
+                "        </tr>" +
+                "      </table>" +
+                "" +
+                "      <!-- Row 3: Participant -->" +
+                "      <table style=\"width: 100%;\">" +
+                "        <tr>" +
+                "          <td style=\"width: 50px; vertical-align: top;\">" +
+                "            <div style=\"background-color: " + orangeBg + "; color: " + accentColor + "; width: 44px; height: 44px; border-radius: 14px; text-align: center; line-height: 44px; font-size: 20px;\">👤</div>" +
+                "          </td>" +
+                "          <td style=\"padding-left: 15px;\">" +
+                "            <p style=\"margin: 0; font-size: 10px; font-weight: 800; color: " + mutedText + "; text-transform: uppercase; letter-spacing: 1.5px;\">Participant</p>" +
+                "            <p style=\"margin: 2px 0 0 0; font-size: 16px; font-weight: 700; color: " + darkText + ";\">" + name + "</p>" +
+                "          </td>" +
+                "        </tr>" +
+                "      </table>" +
+                "" +
+                "    </div>" +
+                "" +
+                "    <!-- Bottom Branding -->" +
+                "    <div style=\"background-color: " + bgColor + "; padding: 25px; border-top: 1px solid " + lightBorder + ";\">" +
+                "      <p style=\"margin: 0; font-size: 11px; font-weight: 700; color: " + mutedText + "; text-transform: uppercase; letter-spacing: 2px;\">EventManager Platform</p>" +
                 "    </div>" +
                 "  </div>" +
-                "  <p style=\"text-align: center; color: #cbd5e1; font-size: 10px; margin-top: 20px;\">Acesta este un email automat. Te rugăm să nu răspunzi.</p>" +
+                "  " +
+                "  <p style=\"margin-top: 30px; font-size: 11px; color: #94a3b8;\">Acesta este un bilet electronic validat prin sistemul nostru.<br/>Te rugăm să nu distribui acest email.</p>" +
                 "</div>";
     }
 }

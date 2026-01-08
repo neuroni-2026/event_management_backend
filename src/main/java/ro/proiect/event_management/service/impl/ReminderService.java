@@ -8,6 +8,7 @@ import ro.proiect.event_management.entity.Favorite;
 import ro.proiect.event_management.entity.Notification;
 import ro.proiect.event_management.entity.NotificationType;
 import ro.proiect.event_management.repository.FavoriteRepository;
+import ro.proiect.event_management.service.EmailService;
 import ro.proiect.event_management.service.NotificationService;
 
 import java.time.LocalDateTime;
@@ -24,7 +25,7 @@ public class ReminderService
     private NotificationService notificationService;
 
     @Autowired
-    private ro.proiect.event_management.service.EmailService emailService;
+    private EmailService emailService;
 
     // Ruleaza la fiecare 15 minute
     @Scheduled(fixedRate = 900000)
