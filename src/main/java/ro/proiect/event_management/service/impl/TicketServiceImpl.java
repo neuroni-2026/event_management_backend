@@ -5,7 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ro.proiect.event_management.dto.request.PurchaseTicketRequest;
 import ro.proiect.event_management.dto.response.TicketResponse;
-import ro.proiect.event_management.entity.*;
+import ro.proiect.event_management.dto.response.TicketValidationResponse;
+import ro.proiect.event_management.entity.Event;
+import ro.proiect.event_management.entity.Notification;
+import ro.proiect.event_management.entity.NotificationType;
+import ro.proiect.event_management.entity.Ticket;
+import ro.proiect.event_management.entity.User;
 import ro.proiect.event_management.repository.EventRepository;
 import ro.proiect.event_management.repository.TicketRepository;
 import ro.proiect.event_management.repository.UserRepository;
@@ -13,8 +18,10 @@ import ro.proiect.event_management.service.EmailService;
 import ro.proiect.event_management.service.NotificationService;
 import ro.proiect.event_management.service.TicketService;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -70,46 +77,41 @@ public class TicketServiceImpl implements TicketService
                 .user(student)
                 .event(event)
                 .qrCode(qrCodeContent)
-                .validatedAt(null) // Nefolosit inca
+                .status("VALID") // Setam explicit statusul
+                .validatedAt(null) 
                 .build();
 
         ticketRepository.save(ticket);
 
-
-
+        // Notificare
         String message = "Felicitari! Ti-ai asigurat locul la evenimentul: " + event.getTitle();
         Notification notification = Notification.builder()
                 .user(student)
-                .event(event)               // Legam notificarea de eveniment (util pt frontend)
+                .event(event)
                 .message(message)
-                .type(NotificationType.INFO) // Setam tipul (foloseste INFO sau creeaza TICKET_PURCHASED)
+                .type(NotificationType.INFO)
                 .isRead(false)
                 .build();
 
-                // Acum apelam serviciul cu obiectul creat
         notificationService.createNotification(notification);
 
         try
         {
-            // Formatam data sa arate frumos in mail (ex: 25 Dec 2024, 18:00)
             String formattedDate = event.getStartTime().format(DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm"));
 
             emailService.sendTicketEmail(
-                    student.getEmail(),       // Unde trimitem
-                    student.getFirstName(),   // Nume student
-                    event.getTitle(),      // Titlu Eveniment
-                    event.getLocation(),   // Locatie
-                    formattedDate,         // Data
-                    ticket.getQrCode()     // Continut QR
+                    student.getEmail(),
+                    student.getFirstName(),
+                    event.getTitle(),
+                    event.getLocation(),
+                    formattedDate,
+                    ticket.getQrCode()
             );
         }
         catch (Exception e)
         {
-            // Prindem orice eroare ca sa nu anulam cumpararea biletului doar pt ca nu a mers mailul
             System.err.println("Nu s-a putut trimite emailul: " + e.getMessage());
         }
-
-
 
         // 7. Returnam DTO-ul
         return new TicketResponse(
@@ -126,10 +128,8 @@ public class TicketServiceImpl implements TicketService
     @Override
     public List<TicketResponse> getMyTickets(Long userId)
     {
-        // Luam toate biletele userului
         List<Ticket> tickets = ticketRepository.findByUserId(userId);
 
-        // Le transformam in DTO-uri
         return tickets.stream().map(ticket -> new TicketResponse(
                 ticket.getId(),
                 ticket.getEvent().getTitle(),
@@ -139,5 +139,65 @@ public class TicketServiceImpl implements TicketService
                 ticket.getUser().getFirstName() + " " + ticket.getUser().getLastName(),
                 ticket.getCreatedAt()
         )).collect(Collectors.toList());
+    }
+
+    @Override
+    public TicketValidationResponse validateTicket(String qrCode, Long organizerId) {
+        Optional<Ticket> ticketOpt = ticketRepository.findByQrCode(qrCode);
+
+        if (ticketOpt.isEmpty()) {
+            return TicketValidationResponse.builder()
+                    .valid(false)
+                    .message("Cod QR Invalid! Biletul nu există.")
+                    .ticketStatus("INVALID")
+                    .build();
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        // LOGICA NOUA: Verificam dreptul de scanare (Proprietar SAU Coleg de Organizatie)
+        User scanner = userRepository.findById(organizerId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User eventCreator = ticket.getEvent().getOrganizer();
+
+        boolean isOwner = eventCreator.getId().equals(organizerId);
+        boolean isSameOrg = false;
+
+        if (scanner.getOrganizationName() != null && eventCreator.getOrganizationName() != null) {
+            // Verificam daca numele organizatiei este identic (ignora majuscule/minuscule)
+            isSameOrg = scanner.getOrganizationName().trim().equalsIgnoreCase(eventCreator.getOrganizationName().trim());
+        }
+
+        if (!isOwner && !isSameOrg) {
+            return TicketValidationResponse.builder()
+                    .valid(false)
+                    .message("Eroare Securitate: Nu faci parte din organizația '" + eventCreator.getOrganizationName() + "'!")
+                    .ticketStatus("INVALID_OWNER")
+                    .build();
+        }
+
+        // Verificam statusul
+        if ("USED".equals(ticket.getStatus())) {
+            return TicketValidationResponse.builder()
+                    .valid(false)
+                    .message("Atenție! Biletul a fost DEJA FOLOSIT.")
+                    .studentName(ticket.getUser().getFirstName() + " " + ticket.getUser().getLastName())
+                    .eventTitle(ticket.getEvent().getTitle())
+                    .ticketStatus("USED")
+                    .build();
+        }
+
+        // Marcam ca folosit
+        ticket.setStatus("USED");
+        ticket.setValidatedAt(LocalDateTime.now());
+        ticketRepository.save(ticket);
+
+        return TicketValidationResponse.builder()
+                .valid(true)
+                .message("Bilet Valid! Acces Permis.")
+                .studentName(ticket.getUser().getFirstName() + " " + ticket.getUser().getLastName())
+                .eventTitle(ticket.getEvent().getTitle())
+                .ticketStatus("VALID")
+                .build();
     }
 }

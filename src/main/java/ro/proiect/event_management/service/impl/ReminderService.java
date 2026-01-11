@@ -44,7 +44,7 @@ public class ReminderService
             Notification reminder = Notification.builder()
                     .user(fav.getUser())
                     .event(fav.getEvent())
-                    .type(NotificationType.REMINDER)
+                    .type(NotificationType.INFO) // Changed from REMINDER to INFO to fix DB constraint
                     .message("Reminder: Evenimentul tău favorit '" + eventTitle + "' începe în curând!")
                     .isRead(false)
                     .build();

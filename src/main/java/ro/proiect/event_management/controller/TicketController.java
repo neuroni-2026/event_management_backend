@@ -104,4 +104,17 @@ public class TicketController
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/validate")
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @Operation(summary = "Validează un bilet prin scanarea codului QR (Doar Organizatori)")
+    public ResponseEntity<?> validateTicket(@RequestBody java.util.Map<String, String> payload) {
+        String qrCode = payload.get("qrCode");
+        if (qrCode == null || qrCode.isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("QR Code is required"));
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(ticketService.validateTicket(qrCode, userDetails.getId()));
+    }
 }

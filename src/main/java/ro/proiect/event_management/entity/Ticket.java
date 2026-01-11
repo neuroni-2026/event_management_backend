@@ -35,6 +35,10 @@ public class Ticket
     @Column(name = "qr_code", unique = true, nullable = false)
     private String qrCode;
 
+    @Column(name = "status")
+    @Builder.Default
+    private String status = "VALID"; // VALID, USED
+
     @Column(name = "validated_at")
     private LocalDateTime validatedAt; // NULL = nefolosit
 
