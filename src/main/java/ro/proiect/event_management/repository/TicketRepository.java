@@ -21,6 +21,10 @@ public interface TicketRepository extends JpaRepository <Ticket, Long>
 
     long countByEventId(Long eventId);
 
+    long countByEventIdAndStatus(Long eventId, String status); // NEW: Numarare bilete USED
+
+    long countByStatus(String status); // NEW: Global count for Admin
+
     // 3. VALIDARE: Gaseste biletul dupa codul QR unic
     Optional<Ticket> findByQrCode(String qrCode);
 

@@ -16,6 +16,7 @@ public class AdminReportDto {
     private long publishedEvents;
     private long pendingEvents;
     private long totalTicketsSold;
+    private long totalCheckIns; // NEW: Numar total de scanari
     private long totalUsers;
     private double averageParticipation; // Rezervări per eveniment publicat
     private Map<String, Long> eventsByCategory;

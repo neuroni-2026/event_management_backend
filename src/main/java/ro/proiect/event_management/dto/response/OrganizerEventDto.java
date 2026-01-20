@@ -23,6 +23,7 @@ public class OrganizerEventDto {
     
     // Statistici calculate
     private long participantCount;
+    private long checkedInCount; // NEW: Numarul celor care au scanat biletul
     private Double averageRating;
     private long reviewCount;
 }

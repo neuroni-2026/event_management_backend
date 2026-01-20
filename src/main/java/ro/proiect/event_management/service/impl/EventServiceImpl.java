@@ -7,8 +7,20 @@ import org.springframework.web.multipart.MultipartFile;
 import ro.proiect.event_management.dto.request.CreateEventRequest;
 import ro.proiect.event_management.dto.response.AdminReportDto;
 import ro.proiect.event_management.dto.response.OrganizerEventDto;
-import ro.proiect.event_management.entity.*;
-import ro.proiect.event_management.repository.*;
+import ro.proiect.event_management.entity.Event;
+import ro.proiect.event_management.entity.EventCategory;
+import ro.proiect.event_management.entity.EventStatus;
+import ro.proiect.event_management.entity.Material;
+import ro.proiect.event_management.entity.Notification;
+import ro.proiect.event_management.entity.NotificationType;
+import ro.proiect.event_management.entity.Review;
+import ro.proiect.event_management.entity.User;
+import ro.proiect.event_management.repository.EventRepository;
+import ro.proiect.event_management.repository.MaterialRepository;
+import ro.proiect.event_management.repository.NotificationRepository;
+import ro.proiect.event_management.repository.ReviewRepository;
+import ro.proiect.event_management.repository.TicketRepository;
+import ro.proiect.event_management.repository.UserRepository;
 import ro.proiect.event_management.service.CloudinaryService;
 import ro.proiect.event_management.service.EventService;
 import ro.proiect.event_management.service.NotificationService;
@@ -214,6 +226,8 @@ public class EventServiceImpl implements EventService
         
         return events.stream().map(e -> {
             long pCount = ticketRepository.countByEventId(e.getId());
+            long checkedIn = ticketRepository.countByEventIdAndStatus(e.getId(), "USED"); // Calculam check-in-urile
+            
             List<Review> reviews = reviewRepository.findByEventId(e.getId());
             double avgRating = reviews.stream()
                     .mapToInt(Review::getRating)
@@ -230,6 +244,7 @@ public class EventServiceImpl implements EventService
                     .status(e.getStatus())
                     .maxCapacity(e.getMaxCapacity())
                     .participantCount(pCount)
+                    .checkedInCount(checkedIn) // Setam valoarea
                     .averageRating(avgRating)
                     .reviewCount(reviews.size())
                     .build();
@@ -343,6 +358,7 @@ public class EventServiceImpl implements EventService
     {
         List<Event> allEvents = eventRepository.findAll();
         long totalTickets = ticketRepository.count();
+        long totalCheckIns = ticketRepository.countByStatus("USED"); // Calculam global
         long totalUsers = userRepository.count();
         
         long publishedCount = allEvents.stream().filter(e -> e.getStatus() == EventStatus.PUBLISHED).count();
@@ -364,6 +380,7 @@ public class EventServiceImpl implements EventService
                 .publishedEvents(publishedCount)
                 .pendingEvents(pendingCount)
                 .totalTicketsSold(totalTickets)
+                .totalCheckIns(totalCheckIns) // Setam valoarea
                 .totalUsers(totalUsers)
                 .averageParticipation(avgParticipation)
                 .eventsByCategory(byCategory)
